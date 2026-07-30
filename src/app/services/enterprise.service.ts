@@ -1,0 +1,449 @@
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, BehaviorSubject } from 'rxjs';
+import { tap } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
+
+export interface Enterprise {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  status: 'ACTIVE' | 'SUSPENDED' | 'PENDING';
+  environment: 'TEST' | 'LIVE';
+  webhook_url?: string;
+  webhook_secret?: string;
+  custom_fee_percentage: number;
+  created_at: string;
+}
+
+export interface EnterpriseApiKey {
+  id: string;
+  name: string;
+  website_url?: string;
+  webhook_url?: string;
+  public_key: string;
+  secret_key?: string; // Returned only on key generation
+  environment: 'TEST' | 'LIVE';
+  is_active: boolean;
+  last_used_at?: string;
+  created_at: string;
+}
+
+export interface EnterpriseTransaction {
+  id: string;
+  customer_phone: string;
+  amount: number;
+  currency: string;
+  status: 'PENDING_USER_APPROVAL' | 'APPROVED' | 'CANCELLED' | 'EXPIRED' | 'FAILED';
+  enterprise_reference: string;
+  poempay_reference: string;
+  created_at: string;
+  approved_at?: string;
+  enterprise?: { id: string; name: string };
+}
+
+export interface EnterpriseDeposit {
+  id: string;
+  enterprise_id: string;
+  api_key_id: string;
+  amount: number;
+  phone_number: string;
+  operator?: string;
+  reference: string;
+  campay_reference?: string;
+  status: 'PENDING' | 'APPROVED' | 'FAILED';
+  created_at: string;
+  updated_at: string;
+  enterprise?: { id: string; name: string };
+  apiKey?: { id: string; name: string };
+}
+
+export interface EnterpriseWithdrawal {
+  id: string;
+  enterprise_id: string;
+  api_key_id: string;
+  amount: number;
+  phone_number: string;
+  account_name?: string;
+  reference: string;
+  campay_reference?: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  created_at: string;
+  updated_at: string;
+  enterprise?: { id: string; name: string };
+  apiKey?: { id: string; name: string };
+}
+
+export interface EnterpriseAnalytics {
+  range?: string;
+  total_volume: number;
+  fee_percentage?: number;
+  net_earnings?: number;
+  total_deposits?: number;
+  total_withdrawn?: number;
+  available_balance?: number;
+  total_transactions: number;
+  successful_transactions: number;
+  cancelled_transactions: number;
+  expired_transactions: number;
+  failed_transactions?: number;
+  pending_transactions?: number;
+  success_rate: string;
+  status_distribution?: {
+    approved: number;
+    pending: number;
+    cancelled: number;
+    expired: number;
+    failed: number;
+  };
+  trend?: {
+    labels: string[];
+    volume: number[];
+    net_earnings: number[];
+  };
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+@Injectable({
+  providedIn: 'root',
+})
+export class EnterpriseService {
+  private baseUrl = environment.backendUrl ? environment.backendUrl.replace(/\/+$/, '') : '';
+
+  // --- Global Enterprise State Management ---
+  private enterpriseSubject = new BehaviorSubject<Enterprise | null>(null);
+  public enterprise$: Observable<Enterprise | null> = this.enterpriseSubject.asObservable();
+
+  private analyticsSubject = new BehaviorSubject<EnterpriseAnalytics | null>(null);
+  public analytics$: Observable<EnterpriseAnalytics | null> = this.analyticsSubject.asObservable();
+
+  private apiKeysSubject = new BehaviorSubject<EnterpriseApiKey[]>([]);
+  public apiKeys$: Observable<EnterpriseApiKey[]> = this.apiKeysSubject.asObservable();
+
+  private transactionsSubject = new BehaviorSubject<EnterpriseTransaction[]>([]);
+  public transactions$: Observable<EnterpriseTransaction[]> = this.transactionsSubject.asObservable();
+
+  public get currentEnterprise(): Enterprise | null {
+    return this.enterpriseSubject.getValue();
+  }
+
+  public setEnterprise(profile: Enterprise | null): void {
+    this.enterpriseSubject.next(profile);
+  }
+
+  constructor(private http: HttpClient) {}
+
+  // --- Super Admin APIs ---
+  getAllEnterprises(
+    page: number = 1,
+    limit: number = 10,
+    search?: string,
+    status?: string,
+  ): Observable<PaginatedResponse<Enterprise>> {
+    let queryParams = `?page=${page}&limit=${limit}`;
+    if (search) queryParams += `&search=${encodeURIComponent(search)}`;
+    if (status) queryParams += `&status=${encodeURIComponent(status)}`;
+
+    return this.http.get<PaginatedResponse<Enterprise>>(
+      `${this.baseUrl}/admin/enterprises${queryParams}`,
+      { withCredentials: true },
+    );
+  }
+
+  getEnterpriseDetailsAdmin(id: string): Observable<Enterprise> {
+    return this.http.get<Enterprise>(`${this.baseUrl}/admin/enterprises/${id}`, {
+      withCredentials: true,
+    });
+  }
+
+  getEnterpriseTransactionsAdminList(
+    id: string,
+    page: number = 1,
+    limit: number = 10,
+    search?: string,
+  ): Observable<PaginatedResponse<EnterpriseTransaction>> {
+    let queryParams = `?page=${page}&limit=${limit}`;
+    if (search) queryParams += `&search=${encodeURIComponent(search)}`;
+
+    return this.http.get<PaginatedResponse<EnterpriseTransaction>>(
+      `${this.baseUrl}/admin/enterprises/${id}/transactions${queryParams}`,
+      { withCredentials: true },
+    );
+  }
+
+  getAllEnterpriseTransactionsAdmin(
+    page: number = 1,
+    limit: number = 10,
+    search?: string,
+    status?: string,
+  ): Observable<PaginatedResponse<EnterpriseTransaction>> {
+    let queryParams = `?page=${page}&limit=${limit}`;
+    if (search) queryParams += `&search=${encodeURIComponent(search)}`;
+    if (status) queryParams += `&status=${encodeURIComponent(status)}`;
+
+    return this.http.get<PaginatedResponse<EnterpriseTransaction>>(
+      `${this.baseUrl}/admin/enterprises/all-transactions${queryParams}`,
+      { withCredentials: true },
+    );
+  }
+
+  getAllEnterpriseDepositsAdmin(
+    page: number = 1,
+    limit: number = 10,
+    search?: string,
+    status?: string,
+  ): Observable<PaginatedResponse<EnterpriseDeposit>> {
+    let queryParams = `?page=${page}&limit=${limit}`;
+    if (search) queryParams += `&search=${encodeURIComponent(search)}`;
+    if (status) queryParams += `&status=${encodeURIComponent(status)}`;
+
+    return this.http.get<PaginatedResponse<EnterpriseDeposit>>(
+      `${this.baseUrl}/admin/enterprises/all-deposits${queryParams}`,
+      { withCredentials: true },
+    );
+  }
+
+  getAllEnterpriseWithdrawalsAdmin(
+    page: number = 1,
+    limit: number = 10,
+    search?: string,
+    status?: string,
+  ): Observable<PaginatedResponse<EnterpriseWithdrawal>> {
+    let queryParams = `?page=${page}&limit=${limit}`;
+    if (search) queryParams += `&search=${encodeURIComponent(search)}`;
+    if (status) queryParams += `&status=${encodeURIComponent(status)}`;
+
+    return this.http.get<PaginatedResponse<EnterpriseWithdrawal>>(
+      `${this.baseUrl}/admin/enterprises/all-withdrawals${queryParams}`,
+      { withCredentials: true },
+    );
+  }
+
+  getEnterpriseDepositsAdminList(
+    id: string,
+    page: number = 1,
+    limit: number = 10,
+    search?: string,
+  ): Observable<PaginatedResponse<EnterpriseDeposit>> {
+    let queryParams = `?page=${page}&limit=${limit}`;
+    if (search) queryParams += `&search=${encodeURIComponent(search)}`;
+
+    return this.http.get<PaginatedResponse<EnterpriseDeposit>>(
+      `${this.baseUrl}/admin/enterprises/${id}/deposits${queryParams}`,
+      { withCredentials: true },
+    );
+  }
+
+  getEnterpriseWithdrawalsAdminList(
+    id: string,
+    page: number = 1,
+    limit: number = 10,
+    search?: string,
+  ): Observable<PaginatedResponse<EnterpriseWithdrawal>> {
+    let queryParams = `?page=${page}&limit=${limit}`;
+    if (search) queryParams += `&search=${encodeURIComponent(search)}`;
+
+    return this.http.get<PaginatedResponse<EnterpriseWithdrawal>>(
+      `${this.baseUrl}/admin/enterprises/${id}/withdrawals${queryParams}`,
+      { withCredentials: true },
+    );
+  }
+
+  createEnterprise(data: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/admin/enterprises`, data, {
+      withCredentials: true,
+    });
+  }
+
+  updateEnterpriseStatus(id: string, status: string): Observable<Enterprise> {
+    return this.http.patch<Enterprise>(
+      `${this.baseUrl}/admin/enterprises/${id}/status`,
+      { status },
+      { withCredentials: true },
+    );
+  }
+
+  getOverallAdminAnalytics(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/admin/enterprises/overall-analytics`, {
+      withCredentials: true,
+    });
+  }
+
+  getEnterpriseAnalyticsAdmin(id: string): Observable<EnterpriseAnalytics> {
+    return this.http.get<EnterpriseAnalytics>(
+      `${this.baseUrl}/admin/enterprises/${id}/analytics`,
+      { withCredentials: true },
+    );
+  }
+
+  // --- Enterprise Portal APIs ---
+  getPortalProfile(): Observable<Enterprise> {
+    return this.http.get<Enterprise>(`${this.baseUrl}/v1/enterprise/portal/profile`, {
+      withCredentials: true,
+    }).pipe(
+      tap(profile => this.enterpriseSubject.next(profile))
+    );
+  }
+
+  getPortalAnalytics(range: string = 'week'): Observable<EnterpriseAnalytics> {
+    return this.http.get<EnterpriseAnalytics>(`${this.baseUrl}/v1/enterprise/portal/analytics?range=${range}`, {
+      withCredentials: true,
+    }).pipe(
+      tap(analytics => this.analyticsSubject.next(analytics))
+    );
+  }
+
+  getApiKeys(): Observable<EnterpriseApiKey[]> {
+    return this.http.get<EnterpriseApiKey[]>(`${this.baseUrl}/v1/enterprise/portal/api-keys`, {
+      withCredentials: true,
+    }).pipe(
+      tap(keys => this.apiKeysSubject.next(keys))
+    );
+  }
+
+  createApiKey(name: string, website_url: string, environment: 'TEST' | 'LIVE' = 'LIVE', webhook_url?: string): Observable<EnterpriseApiKey> {
+    return this.http.post<EnterpriseApiKey>(
+      `${this.baseUrl}/v1/enterprise/portal/api-keys`,
+      { name, website_url, environment, webhook_url },
+      { withCredentials: true },
+    ).pipe(
+      tap(() => this.getApiKeys().subscribe())
+    );
+  }
+
+  updateApiKeyWebhook(keyId: string, webhook_url: string): Observable<any> {
+    return this.http.patch<any>(
+      `${this.baseUrl}/v1/enterprise/portal/api-keys/${keyId}/webhook`,
+      { webhook_url },
+      { withCredentials: true },
+    ).pipe(
+      tap(() => this.getApiKeys().subscribe())
+    );
+  }
+
+  revokeApiKey(id: string): Observable<any> {
+    return this.http.patch<any>(`${this.baseUrl}/v1/enterprise/portal/api-keys/${id}/revoke`, {}, {
+      withCredentials: true,
+    }).pipe(
+      tap(() => this.getApiKeys().subscribe())
+    );
+  }
+
+  rollSecretKey(id: string): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/v1/enterprise/portal/api-keys/${id}/roll-secret`, {}, {
+      withCredentials: true,
+    }).pipe(
+      tap(() => this.getApiKeys().subscribe())
+    );
+  }
+
+  deleteApiKey(id: string): Observable<any> {
+    return this.http.delete<any>(`${this.baseUrl}/v1/enterprise/portal/api-keys/${id}`, {
+      withCredentials: true,
+    }).pipe(
+      tap(() => this.getApiKeys().subscribe())
+    );
+  }
+
+  getApiKeyDetails(id: string): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/v1/enterprise/portal/api-keys/${id}`, {
+      withCredentials: true,
+    });
+  }
+
+  depositToApiKey(id: string, data: { amount: number; provider: string; phone_number: string }): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/v1/enterprise/portal/api-keys/${id}/deposit`, data, {
+      withCredentials: true,
+    }).pipe(
+      tap(() => {
+        this.getApiKeys().subscribe();
+        this.getPortalAnalytics().subscribe();
+      })
+    );
+  }
+
+  withdrawFromApiKey(id: string, data: { amount: number; provider: string; phone_number: string; account_name?: string }): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/v1/enterprise/portal/api-keys/${id}/withdraw`, data, {
+      withCredentials: true,
+    }).pipe(
+      tap(() => {
+        this.getApiKeys().subscribe();
+        this.getPortalAnalytics().subscribe();
+      })
+    );
+  }
+
+  updateWebhook(webhook_url: string): Observable<Enterprise> {
+    return this.http.patch<Enterprise>(
+      `${this.baseUrl}/v1/enterprise/portal/webhook`,
+      { webhook_url },
+      { withCredentials: true },
+    ).pipe(
+      tap(updated => {
+        const current = this.enterpriseSubject.getValue();
+        if (current) {
+          this.enterpriseSubject.next({ ...current, webhook_url: updated.webhook_url || webhook_url });
+        } else {
+          this.getPortalProfile().subscribe();
+        }
+      })
+    );
+  }
+
+  getPortalTransactions(): Observable<EnterpriseTransaction[]> {
+    return this.http.get<EnterpriseTransaction[]>(
+      `${this.baseUrl}/v1/enterprise/portal/transactions`,
+      { withCredentials: true },
+    ).pipe(
+      tap(txs => this.transactionsSubject.next(txs))
+    );
+  }
+
+  getHolderInfo(phoneNumber: string): Observable<{ name: string; operator: string }> {
+    return this.http.get<{ name: string; operator: string }>(
+      `${this.baseUrl}/v1/enterprise/portal/holder-info?phone_number=${encodeURIComponent(phoneNumber)}`,
+      { withCredentials: true },
+    );
+  }
+
+  updatePortalProfile(data: { name?: string; email?: string; phone?: string }): Observable<any> {
+    return this.http.patch<any>(
+      `${this.baseUrl}/v1/enterprise/portal/profile`,
+      data,
+      { withCredentials: true }
+    ).pipe(
+      tap(res => {
+        if (res && res.enterprise) {
+          this.enterpriseSubject.next(res.enterprise);
+        } else {
+          this.getPortalProfile().subscribe();
+        }
+      })
+    );
+  }
+
+  requestPasswordOtp(): Observable<any> {
+    return this.http.post<any>(
+      `${this.baseUrl}/v1/enterprise/portal/request-password-otp`,
+      {},
+      { withCredentials: true }
+    );
+  }
+
+  changePasswordWithOtp(data: { currentPassword?: string; newPassword: string; otp: string }): Observable<any> {
+    return this.http.post<any>(
+      `${this.baseUrl}/v1/enterprise/portal/change-password`,
+      data,
+      { withCredentials: true }
+    );
+  }
+}
+

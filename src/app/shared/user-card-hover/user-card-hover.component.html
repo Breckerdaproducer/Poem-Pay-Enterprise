@@ -1,0 +1,88 @@
+<div class="relative inline-block text-left group/popover">
+  <!-- Non-Interactive Display for System Agents / Admins / Invalid UUIDs -->
+  <span *ngIf="isSystemOrAdminOrInvalidUuid" class="font-bold text-xs opacity-90" style="color: var(--text-primary)">
+    {{ computedDisplayName }}
+  </span>
+
+  <!-- Clickable Name Link for Real Customers / Merchants -->
+  <a *ngIf="!isSystemOrAdminOrInvalidUuid"
+     (click)="navigate($event)"
+     (mouseenter)="onMouseEnter($event)"
+     (mouseleave)="onMouseLeave()"
+     [class]="textClass"
+     style="color: var(--text-primary)">
+    {{ computedDisplayName }}
+  </a>
+
+  <!-- Hover Popover Preview Card (Fixed Viewport Top-Layer) -->
+  <div *ngIf="isHovered"
+       (mouseenter)="onMouseEnter()"
+       (mouseleave)="onMouseLeave()"
+       class="fixed z-[99999] w-72 p-4 rounded-2xl border shadow-2xl backdrop-blur-md animate-in fade-in zoom-in-95 duration-200 space-y-3 pointer-events-auto"
+       [style.top.px]="popoverTop"
+       [style.left.px]="popoverLeft"
+       style="background: var(--bg-card); border-color: var(--border); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85)">
+
+    <!-- Popover Header -->
+    <div class="flex items-center gap-3 border-b pb-3" style="border-color: var(--border)">
+      <div class="w-10 h-10 rounded-xl bg-indigo-600/20 text-indigo-400 font-extrabold flex items-center justify-center text-sm shrink-0 border border-indigo-500/20 overflow-hidden">
+        <img *ngIf="userAvatarUrl && !avatarFailed" [src]="userAvatarUrl" (error)="onAvatarError()" class="w-full h-full object-cover" />
+        <span *ngIf="!userAvatarUrl || avatarFailed">{{ initials }}</span>
+      </div>
+
+      <div class="flex flex-col min-w-0 flex-1">
+        <div class="flex items-center justify-between gap-1">
+          <h4 class="text-xs font-extrabold truncate" style="color: var(--text-primary)">
+            {{ computedDisplayName }}
+          </h4>
+          <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border shrink-0"
+                [class.bg-emerald-500/10]="userStatus === 'ACTIVE'"
+                [class.text-emerald-400]="userStatus === 'ACTIVE'"
+                [class.border-emerald-500/20]="userStatus === 'ACTIVE'"
+                [class.bg-rose-500/10]="userStatus !== 'ACTIVE'"
+                [class.text-rose-400]="userStatus !== 'ACTIVE'"
+                [class.border-rose-500/20]="userStatus !== 'ACTIVE'">
+            {{ userStatus }}
+          </span>
+        </div>
+        <span class="text-[10px] font-bold uppercase text-indigo-400 mt-0.5">
+          {{ isMerchant ? 'Merchant Account' : 'Customer Account' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Details Body -->
+    <div class="space-y-2 text-xs">
+      <div class="flex items-center gap-2 text-slate-300">
+        <i class="fa-solid fa-envelope text-indigo-400 text-[11px] w-4 text-center"></i>
+        <span class="text-[11px] truncate" style="color: var(--text-secondary)">{{ userEmail }}</span>
+      </div>
+
+      <div class="flex items-center gap-2 text-slate-300">
+        <i class="fa-solid fa-phone text-indigo-400 text-[11px] w-4 text-center"></i>
+        <span class="text-[11px] font-mono" style="color: var(--text-secondary)">{{ userPhone }}</span>
+      </div>
+
+      <div *ngIf="effectiveUserId" class="flex items-center gap-2 text-slate-300">
+        <i class="fa-solid fa-id-card text-indigo-400 text-[11px] w-4 text-center"></i>
+        <span class="text-[10px] font-mono text-slate-400">ID: {{ effectiveUserId | slice:0:18 }}...</span>
+      </div>
+
+      <div *ngIf="fetchedProfile && fetchedProfile.wallet_balance !== undefined" class="pt-2 border-t flex items-center justify-between" style="border-color: var(--border)">
+        <span class="text-[10px] font-bold uppercase text-slate-400">Wallet Balance</span>
+        <span class="text-xs font-bold text-emerald-400 font-mono">
+          {{ fetchedProfile.wallet_balance | number }} XAF
+        </span>
+      </div>
+    </div>
+
+    <!-- Quick Profile Action Button -->
+    <div class="pt-2 border-t" style="border-color: var(--border)">
+      <button (click)="navigate($event)"
+              class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-md active:scale-95 cursor-pointer">
+        <span>View Full Profile</span>
+        <i class="fa-solid fa-arrow-right text-[10px]"></i>
+      </button>
+    </div>
+  </div>
+</div>
