@@ -58,6 +58,11 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": {
+    "allowedHosts": [
+      "enterprise.poempay.com"
+    ]
+  },
           "configurations": {
             "production": {
               "buildTarget": "poem-pay-enterprise:build:production"
