@@ -57,7 +57,7 @@ import { NotificationService } from '../../services/notification.service';
               <div>
                 <h4 class="text-white font-bold mb-1">Dedicated B2B Infrastructure</h4>
                 <p class="text-sm leading-relaxed" style="color: #4e6a94">
-                  Authenticated via secret key signatures (<code class="text-indigo-300">sk_ent_live_...</code>),
+                  Authenticated via secret key signatures,
                   atomic wallet deductions, and real-time webhook callbacks.
                 </p>
               </div>
