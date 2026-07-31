@@ -311,6 +311,7 @@ import { WebsocketService } from '../../services/websocket.service';
                 placeholder="237670000000"
                 class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-xs font-bold font-mono bg-white text-slate-900 focus:border-indigo-500 focus:outline-none"
               />
+              <p class="text-[10px] text-slate-400 mt-1 font-sans">Must start with country code 237 (e.g. 237670000000)</p>
               <div *ngIf="depositHolderLoading" class="text-xs text-indigo-600 font-semibold flex items-center gap-1.5 mt-2">
                 <i class="fa-solid fa-circle-notch fa-spin text-xs"></i> Verifying account holder with Campay...
               </div>
@@ -412,6 +413,7 @@ import { WebsocketService } from '../../services/websocket.service';
                 placeholder="237670000000"
                 class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-xs font-bold font-mono bg-white text-slate-900 focus:border-indigo-500 focus:outline-none"
               />
+              <p class="text-[10px] text-slate-400 mt-1 font-sans">Must start with country code 237 (e.g. 237670000000)</p>
               <div *ngIf="withdrawHolderLoading" class="text-xs text-indigo-600 font-semibold flex items-center gap-1.5 mt-2">
                 <i class="fa-solid fa-circle-notch fa-spin text-xs"></i> Verifying account holder with Campay...
               </div>
@@ -540,62 +542,83 @@ export class ApiKeyDetailComponent implements OnInit, OnDestroy {
     });
   }
 
+  formatCameroonPhone(phone: string): { formatted: string; isValid: boolean } {
+    let clean = (phone || '').replace(/[^0-9]/g, '');
+    if (clean.length === 9) {
+      clean = '237' + clean;
+    }
+    const isValid = clean.startsWith('237') && clean.length === 12;
+    return { formatted: clean, isValid };
+  }
+
   onDepositPhoneBlur(): void {
-    const clean = (this.depositPhone || '').replace(/[^0-9]/g, '');
+    const { formatted, isValid } = this.formatCameroonPhone(this.depositPhone);
+    this.depositPhone = formatted;
     this.depositHolderName = null;
     this.depositHolderError = null;
 
-    if (clean.length >= 9) {
-      this.depositHolderLoading = true;
-      this.enterpriseService.getHolderInfo(clean).pipe(
-        finalize(() => {
-          this.depositHolderLoading = false;
-          this.cdr.markForCheck();
-        })
-      ).subscribe({
-        next: (res) => {
-          if (res?.name) {
-            this.depositHolderName = res.name;
-          } else {
-            this.depositHolderError = 'Unable to verify account holder name for this phone number.';
-          }
-          this.cdr.markForCheck();
-        },
-        error: () => {
-          this.depositHolderError = 'Unable to verify account holder name from Campay.';
-          this.cdr.markForCheck();
-        }
-      });
+    if (!isValid) {
+      if (this.depositPhone.length > 0) {
+        this.depositHolderError = 'Phone number must start with country code 237 (e.g. 237670000000)';
+      }
+      return;
     }
+
+    this.depositHolderLoading = true;
+    this.enterpriseService.getHolderInfo(formatted).pipe(
+      finalize(() => {
+        this.depositHolderLoading = false;
+        this.cdr.markForCheck();
+      })
+    ).subscribe({
+      next: (res) => {
+        if (res?.name) {
+          this.depositHolderName = res.name;
+        } else {
+          this.depositHolderError = 'Unable to verify account holder name for this phone number.';
+        }
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.depositHolderError = 'Unable to verify account holder name from Campay.';
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   onWithdrawPhoneBlur(): void {
-    const clean = (this.withdrawPhone || '').replace(/[^0-9]/g, '');
+    const { formatted, isValid } = this.formatCameroonPhone(this.withdrawPhone);
+    this.withdrawPhone = formatted;
     this.withdrawHolderName = null;
     this.withdrawHolderError = null;
 
-    if (clean.length >= 9) {
-      this.withdrawHolderLoading = true;
-      this.enterpriseService.getHolderInfo(clean).pipe(
-        finalize(() => {
-          this.withdrawHolderLoading = false;
-          this.cdr.markForCheck();
-        })
-      ).subscribe({
-        next: (res) => {
-          if (res?.name) {
-            this.withdrawHolderName = res.name;
-          } else {
-            this.withdrawHolderError = 'Unable to verify account holder name for this phone number.';
-          }
-          this.cdr.markForCheck();
-        },
-        error: () => {
-          this.withdrawHolderError = 'Unable to verify account holder name from Campay.';
-          this.cdr.markForCheck();
-        }
-      });
+    if (!isValid) {
+      if (this.withdrawPhone.length > 0) {
+        this.withdrawHolderError = 'Phone number must start with country code 237 (e.g. 237670000000)';
+      }
+      return;
     }
+
+    this.withdrawHolderLoading = true;
+    this.enterpriseService.getHolderInfo(formatted).pipe(
+      finalize(() => {
+        this.withdrawHolderLoading = false;
+        this.cdr.markForCheck();
+      })
+    ).subscribe({
+      next: (res) => {
+        if (res?.name) {
+          this.withdrawHolderName = res.name;
+        } else {
+          this.withdrawHolderError = 'Unable to verify account holder name for this phone number.';
+        }
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.withdrawHolderError = 'Unable to verify account holder name from Campay.';
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   onConfirmDeposit(): void {
@@ -606,10 +629,12 @@ export class ApiKeyDetailComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!this.depositPhone || this.depositPhone.trim() === '') {
-      this.notification.error('Please enter Mobile Money payer phone number.');
+    const { formatted, isValid } = this.formatCameroonPhone(this.depositPhone);
+    if (!isValid) {
+      this.notification.error('Phone number must start with country code 237 (e.g. 237670000000)');
       return;
     }
+    this.depositPhone = formatted;
 
     this.loader.show();
     this.enterpriseService.depositToApiKey(this.keyId, {
@@ -643,10 +668,12 @@ export class ApiKeyDetailComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!this.withdrawPhone || this.withdrawPhone.trim() === '') {
-      this.notification.error('Please enter recipient Mobile Money phone number.');
+    const { formatted, isValid } = this.formatCameroonPhone(this.withdrawPhone);
+    if (!isValid) {
+      this.notification.error('Phone number must start with country code 237 (e.g. 237670000000)');
       return;
     }
+    this.withdrawPhone = formatted;
 
     const available = this.keyDetails?.wallet?.available_balance || 0;
     if (this.withdrawAmount > available) {
