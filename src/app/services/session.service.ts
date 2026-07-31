@@ -18,7 +18,7 @@ export interface UserSession {
   providedIn: 'root'
 })
 export class SessionService {
-  private readonly STORAGE_KEY = 'poempay_user_session';
+  private readonly STORAGE_KEY = 'poempay_enterprise_user_session';
   private userSubject: BehaviorSubject<UserSession | null>;
   public currentUser$: Observable<UserSession | null>;
   private isAuthChecked = false;
@@ -126,25 +126,22 @@ export class SessionService {
 
   getMe(): Observable<UserSession | null> {
     if (!this.isBrowser()) return of(null);
-    return this.http.get<any>(environment.backendUrl + 'auth/me', {
+    const baseUrl = environment.backendUrl ? environment.backendUrl.replace(/\/+$/, '') : '';
+    return this.http.get<any>(`${baseUrl}/v1/enterprise/portal/profile`, {
       withCredentials: true
     }).pipe(
       map(res => {
-        const admin = res?.admin || res?.user || res;
-        if (admin && admin.email) {
-          const name = admin.first_name && admin.last_name 
-            ? `${admin.first_name} ${admin.last_name}` 
-            : (admin.name || admin.email);
-          const role = admin.role || 'Admin';
-          const avatarUrl = admin.avatar_url || admin.metadata?.avatar_url;
-          this.saveUser(admin.email, name, role, admin.user_id, avatarUrl);
+        const ent = res?.enterprise || res;
+        if (ent && (ent.email || ent.id)) {
+          const name = ent.name || ent.email;
+          const role = 'ENTERPRISE_OWNER';
+          this.saveUser(ent.email, name, role, ent.id, null);
           return this.getUser();
         }
         this.clearUser();
         return null;
       }),
-      catchError((err) => {
-        console.error('getMe failed:', err.status, err.url);
+      catchError(() => {
         this.clearUser();
         return of(null);
       })

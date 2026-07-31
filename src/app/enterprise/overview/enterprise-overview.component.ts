@@ -304,6 +304,7 @@ Chart.register(...registerables);
                 <tr class="border-b border-slate-200 bg-slate-50 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                   <th class="py-2.5 px-3">Customer Reference</th>
                   <th class="py-2.5 px-3">Amount (XAF)</th>
+                  <th class="py-2.5 px-3">Charges (XAF)</th>
                   <th class="py-2.5 px-3">Status</th>
                   <th class="py-2.5 px-3 text-right">Timestamp</th>
                 </tr>
@@ -316,6 +317,9 @@ Chart.register(...registerables);
                   </td>
                   <td class="py-3 px-3 font-bold text-slate-900">
                     XAF {{ tx.amount | number:'1.0-0' }}
+                  </td>
+                  <td class="py-3 px-3 font-semibold text-amber-600">
+                    XAF {{ (tx.fee || 0) | number:'1.0-0' }}
                   </td>
                   <td class="py-3 px-3">
                     <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border"
@@ -332,7 +336,7 @@ Chart.register(...registerables);
                   </td>
                 </tr>
                 <tr *ngIf="recentTransactions.length === 0">
-                  <td colspan="4" class="py-6 text-center text-xs text-slate-400">
+                  <td colspan="5" class="py-6 text-center text-xs text-slate-400">
                     No recent prompt transactions found for selected range.
                   </td>
                 </tr>

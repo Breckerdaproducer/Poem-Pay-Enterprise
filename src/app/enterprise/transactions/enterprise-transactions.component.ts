@@ -33,6 +33,7 @@ import { LoaderService } from '../../services/loader.service';
               <th class="py-3 px-4">Order Ref</th>
               <th class="py-3 px-4">Customer Phone</th>
               <th class="py-3 px-4">Amount</th>
+              <th class="py-3 px-4">Charges</th>
               <th class="py-3 px-4">Status</th>
               <th class="py-3 px-4">Date</th>
             </tr>
@@ -43,6 +44,7 @@ import { LoaderService } from '../../services/loader.service';
               <td class="py-3.5 px-4 font-mono text-slate-600">{{ txn.enterprise_reference }}</td>
               <td class="py-3.5 px-4 font-bold text-slate-900">{{ txn.customer_phone }}</td>
               <td class="py-3.5 px-4 font-bold text-slate-900">{{ txn.amount | number:'1.2-2' }} {{ txn.currency }}</td>
+              <td class="py-3.5 px-4 font-semibold text-amber-600">{{ (txn.fee || 0) | number:'1.2-2' }} {{ txn.currency }}</td>
               <td class="py-3.5 px-4">
                 <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border" [ngClass]="{
                   'bg-emerald-50 text-emerald-700 border-emerald-200': txn.status === 'APPROVED',
@@ -55,7 +57,7 @@ import { LoaderService } from '../../services/loader.service';
               <td class="py-3.5 px-4 text-slate-400 font-medium">{{ txn.created_at | date:'medium' }}</td>
             </tr>
             <tr *ngIf="transactions.length === 0">
-              <td colspan="6" class="py-8 text-center text-slate-400">No transactions recorded yet for this Enterprise.</td>
+              <td colspan="7" class="py-8 text-center text-slate-400">No transactions recorded yet for this Enterprise.</td>
             </tr>
           </tbody>
         </table>

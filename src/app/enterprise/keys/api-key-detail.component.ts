@@ -171,6 +171,7 @@ import { WebsocketService } from '../../services/websocket.service';
                   <th class="py-3 px-4">Recipient Phone</th>
                   <th class="py-3 px-4">Account Holder</th>
                   <th class="py-3 px-4">Amount</th>
+                  <th class="py-3 px-4">Charges</th>
                   <th class="py-3 px-4">Status</th>
                   <th class="py-3 px-4">Date</th>
                 </tr>
@@ -186,6 +187,7 @@ import { WebsocketService } from '../../services/websocket.service';
                   <td class="py-3.5 px-4 font-semibold">{{ w.phone_number }}</td>
                   <td class="py-3.5 px-4 text-slate-600">{{ w.account_name || 'N/A' }}</td>
                   <td class="py-3.5 px-4 font-bold text-purple-700">XAF {{ w.amount | number:'1.2-2' }}</td>
+                  <td class="py-3.5 px-4 font-semibold text-amber-600">XAF {{ (w.fee || 0) | number:'1.2-2' }}</td>
                   <td class="py-3.5 px-4">
                     <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                       {{ w.status }}
@@ -194,7 +196,7 @@ import { WebsocketService } from '../../services/websocket.service';
                   <td class="py-3.5 px-4 text-slate-400">{{ w.created_at | date:'medium' }}</td>
                 </tr>
                 <tr *ngIf="!keyDetails?.recent_withdrawals || keyDetails?.recent_withdrawals?.length === 0">
-                  <td colspan="7" class="py-8 text-center text-slate-400">No withdrawals recorded for this API key yet. Click "Withdraw Funds" above to cash out.</td>
+                  <td colspan="8" class="py-8 text-center text-slate-400">No withdrawals recorded for this API key yet. Click "Withdraw Funds" above to cash out.</td>
                 </tr>
               </tbody>
             </table>
@@ -209,6 +211,7 @@ import { WebsocketService } from '../../services/websocket.service';
                   <th class="py-3 px-4">Provider</th>
                   <th class="py-3 px-4">Payer Phone</th>
                   <th class="py-3 px-4">Amount</th>
+                  <th class="py-3 px-4">Charges</th>
                   <th class="py-3 px-4">Status</th>
                   <th class="py-3 px-4">Date</th>
                 </tr>
@@ -223,6 +226,7 @@ import { WebsocketService } from '../../services/websocket.service';
                   </td>
                   <td class="py-3.5 px-4 font-semibold">{{ d.phone_number }}</td>
                   <td class="py-3.5 px-4 font-bold text-emerald-700">XAF {{ d.amount | number:'1.2-2' }}</td>
+                  <td class="py-3.5 px-4 font-semibold text-amber-600">XAF {{ (d.fee || 0) | number:'1.2-2' }}</td>
                   <td class="py-3.5 px-4">
                     <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                       {{ d.status }}
@@ -231,7 +235,7 @@ import { WebsocketService } from '../../services/websocket.service';
                   <td class="py-3.5 px-4 text-slate-400">{{ d.created_at | date:'medium' }}</td>
                 </tr>
                 <tr *ngIf="!keyDetails?.recent_deposits || keyDetails?.recent_deposits?.length === 0">
-                  <td colspan="6" class="py-8 text-center text-slate-400">No deposit top-ups recorded for this API key yet. Click "Deposit Funds" above to add money.</td>
+                  <td colspan="7" class="py-8 text-center text-slate-400">No deposit top-ups recorded for this API key yet. Click "Deposit Funds" above to add money.</td>
                 </tr>
               </tbody>
             </table>
@@ -277,8 +281,12 @@ import { WebsocketService } from '../../services/websocket.service';
                 <span>+ 2% Deposit Top-up Fee:</span>
                 <span class="font-bold">+ XAF {{ (depositAmount * 0.02) | number:'1.0-0' }}</span>
               </div>
+              <div class="flex justify-between">
+                <span>Net Wallet Credit:</span>
+                <span class="font-bold text-emerald-700">XAF {{ depositAmount | number:'1.0-0' }}</span>
+              </div>
               <div class="flex justify-between pt-1.5 border-t border-indigo-200 font-extrabold text-sm text-indigo-900">
-                <span>Total Charge & Wallet Credit:</span>
+                <span>Total Mobile Money Charge:</span>
                 <span>XAF {{ (depositAmount * 1.02) | number:'1.0-0' }}</span>
               </div>
             </div>

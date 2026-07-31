@@ -34,6 +34,7 @@ export interface EnterpriseTransaction {
   id: string;
   customer_phone: string;
   amount: number;
+  fee?: number;
   currency: string;
   status: 'PENDING_USER_APPROVAL' | 'APPROVED' | 'CANCELLED' | 'EXPIRED' | 'FAILED';
   enterprise_reference: string;
@@ -48,6 +49,7 @@ export interface EnterpriseDeposit {
   enterprise_id: string;
   api_key_id: string;
   amount: number;
+  fee?: number;
   phone_number: string;
   operator?: string;
   reference: string;
@@ -64,6 +66,7 @@ export interface EnterpriseWithdrawal {
   enterprise_id: string;
   api_key_id: string;
   amount: number;
+  fee?: number;
   phone_number: string;
   account_name?: string;
   reference: string;
