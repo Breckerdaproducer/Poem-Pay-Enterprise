@@ -64,12 +64,23 @@ export const guestGuard: CanActivateFn = () => {
 
   const cachedUser = sessionService.getUser();
   if (cachedUser) {
+    const role = cachedUser.role?.toLowerCase() || '';
+    if (!role.includes('enterprise')) {
+      sessionService.clearUser();
+      return true;
+    }
     return router.createUrlTree(['/dashboard']);
   }
 
   return sessionService.checkAuthentication().pipe(
     map(isAuthenticated => {
       if (!isAuthenticated) {
+        return true;
+      }
+      const user = sessionService.getUser();
+      const role = user?.role?.toLowerCase() || '';
+      if (!role.includes('enterprise')) {
+        sessionService.clearUser();
         return true;
       }
       return router.createUrlTree(['/dashboard']);
