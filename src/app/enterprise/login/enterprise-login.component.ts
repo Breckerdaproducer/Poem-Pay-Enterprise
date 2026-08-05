@@ -168,8 +168,6 @@ import { NotificationService } from '../../services/notification.service';
             </button>
           </form>
 
-          
-
         </div>
       </div>
 
@@ -253,3 +251,4 @@ export class EnterpriseLoginComponent implements OnInit {
     });
   }
 }
+
