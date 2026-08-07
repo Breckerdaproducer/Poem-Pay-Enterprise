@@ -332,16 +332,7 @@ interface SandboxResult {
                     />
                   </div>
 
-                  <!-- Path Param: Deposit / Withdrawal API Key ID (:api_key_id) -->
-                  <div *ngIf="selectedEndpoint === 'deposit' || selectedEndpoint === 'withdraw'" class="space-y-1">
-                    <label class="text-[11px] font-semibold text-slate-600">Path Param: api_key_id (:api_key_id)</label>
-                    <input 
-                      type="text" 
-                      [(ngModel)]="sandboxKeyId" 
-                      placeholder="KEY_UUID_998124"
-                      class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 font-mono text-xs text-slate-800 focus:outline-none focus:border-indigo-500 font-bold"
-                    />
-                  </div>
+
 
                   <!-- Phone Number (Charge, Deposit, Withdraw, Resolve) -->
                   <div *ngIf="selectedEndpoint === 'charge' || selectedEndpoint === 'deposit' || selectedEndpoint === 'withdraw' || selectedEndpoint === 'resolve'" class="space-y-1">

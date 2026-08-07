@@ -22,6 +22,7 @@ export interface EnterpriseApiKey {
   name: string;
   website_url?: string;
   webhook_url?: string;
+  webhook_secret?: string;
   public_key: string;
   secret_key?: string; // Returned only on key generation
   environment: 'TEST' | 'LIVE';
@@ -33,6 +34,7 @@ export interface EnterpriseApiKey {
 
 export interface EnterpriseTransaction {
   id: string;
+  type?: 'PAYMENT' | 'DEPOSIT' | 'WITHDRAWAL';
   customer_phone: string;
   amount: number;
   fee?: number;
@@ -42,6 +44,7 @@ export interface EnterpriseTransaction {
   poempay_reference: string;
   created_at: string;
   approved_at?: string;
+  failure_reason?: string;
   enterprise?: { id: string; name: string };
 }
 
@@ -305,11 +308,25 @@ export class EnterpriseService {
     );
   }
 
-  getApiKeys(): Observable<EnterpriseApiKey[]> {
-    return this.http.get<EnterpriseApiKey[]>(`${this.baseUrl}/v1/enterprise/portal/api-keys`, {
+  getApiKeys(page?: number, limit?: number, search?: string): Observable<any> {
+    let queryParams = '';
+    if (page && limit) {
+      queryParams = `?page=${page}&limit=${limit}`;
+      if (search) queryParams += `&search=${encodeURIComponent(search)}`;
+    } else if (search) {
+      queryParams = `?search=${encodeURIComponent(search)}`;
+    }
+
+    return this.http.get<any>(`${this.baseUrl}/v1/enterprise/portal/api-keys${queryParams}`, {
       withCredentials: true,
     }).pipe(
-      tap(keys => this.apiKeysSubject.next(keys))
+      tap(res => {
+        if (res && res.data) {
+          this.apiKeysSubject.next(res.data);
+        } else if (Array.isArray(res)) {
+          this.apiKeysSubject.next(res);
+        }
+      })
     );
   }
 
@@ -412,12 +429,33 @@ export class EnterpriseService {
     );
   }
 
-  getPortalTransactions(): Observable<EnterpriseTransaction[]> {
-    return this.http.get<EnterpriseTransaction[]>(
-      `${this.baseUrl}/v1/enterprise/portal/transactions`,
+  getPortalTransactions(
+    page: number = 1,
+    limit: number = 25,
+    search?: string,
+    status?: string,
+    sortBy: string = 'DATE_DESC',
+    type?: string,
+    apiKeyId?: string,
+  ): Observable<any> {
+    let queryParams = `?page=${page}&limit=${limit}`;
+    if (search) queryParams += `&search=${encodeURIComponent(search)}`;
+    if (status && status !== 'ALL') queryParams += `&status=${encodeURIComponent(status)}`;
+    if (type && type !== 'ALL') queryParams += `&type=${encodeURIComponent(type)}`;
+    if (sortBy) queryParams += `&sortBy=${encodeURIComponent(sortBy)}`;
+    if (apiKeyId) queryParams += `&apiKeyId=${encodeURIComponent(apiKeyId)}`;
+
+    return this.http.get<any>(
+      `${this.baseUrl}/v1/enterprise/portal/transactions${queryParams}`,
       { withCredentials: true },
     ).pipe(
-      tap(txs => this.transactionsSubject.next(txs))
+      tap(res => {
+        if (res && res.data) {
+          this.transactionsSubject.next(res.data);
+        } else if (Array.isArray(res)) {
+          this.transactionsSubject.next(res);
+        }
+      })
     );
   }
 

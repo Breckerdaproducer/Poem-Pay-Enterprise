@@ -12,64 +12,70 @@ import { LoaderService } from '../../services/loader.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500 text-slate-900 pb-12">
+    <div class="space-y-6 animate-in fade-in duration-500 text-slate-900 font-sans pb-12">
       
-      <!-- Top Title Header -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
-        <div>
-          <div class="flex items-center gap-3">
-            <h2 class="text-xl font-extrabold tracking-tight text-slate-900">Enterprise Profile & Security</h2>
-            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200">
-              Settings Portal
+      <!-- Top Title Header Bar -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs relative overflow-hidden">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2.5">
+            <h2 class="text-xl font-extrabold tracking-tight text-slate-900">Enterprise Settings & Security</h2>
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200">
+              Admin Portal
             </span>
           </div>
-          <p class="text-xs text-slate-500 mt-1">Manage company identity details, contact information, and security credentials</p>
+          <p class="text-xs text-slate-500">Manage company identity details, contact information, and security credentials.</p>
         </div>
 
-        <div class="flex items-center gap-2">
+        <!-- Segmented Tab Switcher -->
+        <div class="flex items-center gap-2 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/80 shrink-0">
           <button
             (click)="activeTab = 'profile'"
-            [class.bg-indigo-600]="activeTab === 'profile'"
-            [class.text-white]="activeTab === 'profile'"
-            [class.bg-slate-100]="activeTab !== 'profile'"
+            [class.bg-white]="activeTab === 'profile'"
+            [class.text-indigo-700]="activeTab === 'profile'"
+            [class.shadow-xs]="activeTab === 'profile'"
             [class.text-slate-600]="activeTab !== 'profile'"
-            class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-xs cursor-pointer">
+            class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer">
             <i class="fa-solid fa-building-user text-xs"></i>
-            Profile & Info
+            <span>Profile & Identity</span>
           </button>
+
           <button
             (click)="activeTab = 'security'"
-            [class.bg-indigo-600]="activeTab === 'security'"
-            [class.text-white]="activeTab === 'security'"
-            [class.bg-slate-100]="activeTab !== 'security'"
+            [class.bg-white]="activeTab === 'security'"
+            [class.text-indigo-700]="activeTab === 'security'"
+            [class.shadow-xs]="activeTab === 'security'"
             [class.text-slate-600]="activeTab !== 'security'"
-            class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-xs cursor-pointer">
+            class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer">
             <i class="fa-solid fa-shield-halved text-xs"></i>
-            Security & OTP Password
+            <span>Security & 2FA OTP</span>
           </button>
         </div>
       </div>
 
       <!-- SECTION 1: PROFILE & COMPANY INFORMATION -->
-      <div *ngIf="activeTab === 'profile'" class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-        <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-          <div>
-            <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-              <i class="fa-solid fa-id-card text-indigo-600"></i>
-              Company & Account Identity
-            </h3>
-            <p class="text-xs text-slate-500 mt-0.5">Update your registered enterprise name, primary notification email, and phone</p>
+      <div *ngIf="activeTab === 'profile'" class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+        
+        <div class="p-6 sm:p-7 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shrink-0">
+              <i class="fa-solid fa-id-card text-base"></i>
+            </div>
+            <div>
+              <h3 class="text-sm font-extrabold text-slate-900">Company & Account Identity</h3>
+              <p class="text-xs text-slate-500">Update registered enterprise name, primary notification email, and phone</p>
+            </div>
           </div>
-          <span
-            class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border"
-            [ngClass]="profile?.environment === 'LIVE' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'">
+
+          <span class="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider border self-start sm:self-auto"
+                [ngClass]="profile?.environment === 'LIVE' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'">
             {{ profile?.environment || 'LIVE' }} Gateway
           </span>
         </div>
 
-        <form (ngSubmit)="onSaveProfile()" class="p-6 space-y-6">
+        <form (ngSubmit)="onSaveProfile()" class="p-6 sm:p-8 space-y-6">
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
             <!-- Enterprise Name -->
             <div class="space-y-1.5">
               <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
@@ -85,7 +91,7 @@ import { LoaderService } from '../../services/loader.service';
                   name="enterpriseName"
                   required
                   placeholder="e.g. Acme Tech Global SARL"
-                  class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-xs font-semibold bg-white text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all"
+                  class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-2xl text-xs font-bold bg-white text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all shadow-xs"
                 />
               </div>
             </div>
@@ -105,7 +111,7 @@ import { LoaderService } from '../../services/loader.service';
                   name="enterpriseEmail"
                   required
                   placeholder="admin@enterprise.com"
-                  class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-xs font-semibold bg-white text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all"
+                  class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-2xl text-xs font-bold bg-white text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all shadow-xs"
                 />
               </div>
             </div>
@@ -113,7 +119,7 @@ import { LoaderService } from '../../services/loader.service';
             <!-- Phone Number -->
             <div class="space-y-1.5 md:col-span-2">
               <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                Phone Number
+                Contact Phone Number
               </label>
               <div class="relative">
                 <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -124,44 +130,44 @@ import { LoaderService } from '../../services/loader.service';
                   [(ngModel)]="profileForm.phone"
                   name="enterprisePhone"
                   placeholder="+237 6xx xxx xxx"
-                  class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-xs font-semibold bg-white text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all"
+                  class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-2xl text-xs font-bold bg-white text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all shadow-xs"
                 />
               </div>
             </div>
           </div>
 
-
           <!-- Enterprise Key Metadata Card -->
-          <div class="p-4 rounded-xl border border-indigo-100 bg-indigo-50/60 text-xs space-y-2 text-indigo-950">
-            <div class="flex items-center gap-2 font-bold text-indigo-800">
+          <div class="p-5 rounded-2xl border border-indigo-100 bg-indigo-50/70 text-xs space-y-2 text-indigo-950">
+            <div class="flex items-center gap-2 font-extrabold text-indigo-900">
               <i class="fa-solid fa-circle-info text-indigo-600"></i>
-              System Account Reference Metadata
+              <span>System Account Reference Metadata</span>
             </div>
+            
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-[11px] pt-1">
               <div>
-                <span class="text-slate-500">Enterprise ID:</span>
+                <span class="text-slate-500 font-medium">Enterprise ID:</span>
                 <p class="font-mono font-bold text-slate-800 break-all">{{ profile?.id || 'N/A' }}</p>
               </div>
               <div>
-                <span class="text-slate-500">Account Status:</span>
+                <span class="text-slate-500 font-medium">Account Status:</span>
                 <p class="font-bold text-emerald-600">{{ profile?.status || 'ACTIVE' }}</p>
               </div>
               <div>
-                <span class="text-slate-500">Member Since:</span>
+                <span class="text-slate-500 font-medium">Member Since:</span>
                 <p class="font-semibold text-slate-800">{{ (profile?.created_at | date:'mediumDate') || 'N/A' }}</p>
               </div>
             </div>
           </div>
 
           <!-- Form Submit Button -->
-          <div class="flex justify-end pt-2 border-t border-slate-100">
+          <div class="flex justify-end pt-3 border-t border-slate-100">
             <button
               type="submit"
               [disabled]="savingProfile"
-              class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer">
+              class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-extrabold rounded-2xl shadow-sm transition-all flex items-center gap-2 cursor-pointer">
               <i *ngIf="savingProfile" class="fa-solid fa-circle-notch animate-spin text-xs"></i>
               <i *ngIf="!savingProfile" class="fa-solid fa-floppy-disk text-xs"></i>
-              {{ savingProfile ? 'Saving Changes...' : 'Save Profile Settings' }}
+              <span>{{ savingProfile ? 'Saving Changes...' : 'Save Profile Settings' }}</span>
             </button>
           </div>
 
@@ -169,23 +175,27 @@ import { LoaderService } from '../../services/loader.service';
       </div>
 
       <!-- SECTION 2: SECURITY & PASSWORD CHANGE (WITH MANDATORY OTP) -->
-      <div *ngIf="activeTab === 'security'" class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-        <div class="p-6 border-b border-slate-100 bg-slate-50/50">
-          <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-            <i class="fa-solid fa-key text-indigo-600"></i>
-            Password Change with 2FA OTP Verification
-          </h3>
-          <p class="text-xs text-slate-500 mt-0.5">Password updates require a 6-digit One-Time Password (OTP) dispatched to your registered email</p>
+      <div *ngIf="activeTab === 'security'" class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+        
+        <div class="p-6 sm:p-7 border-b border-slate-100 bg-slate-50/50 flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shrink-0">
+            <i class="fa-solid fa-key text-base"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-extrabold text-slate-900">Password Change with 2FA OTP Verification</h3>
+            <p class="text-xs text-slate-500">Password updates require a 6-digit One-Time Password (OTP) dispatched to your registered email</p>
+          </div>
         </div>
 
         <!-- Security Banner Box -->
-        <div class="p-6 space-y-6">
-          <div class="p-4 rounded-xl border border-amber-200 bg-amber-50 text-xs text-amber-900 space-y-1.5">
-            <div class="flex items-center gap-2 font-bold text-amber-800">
+        <div class="p-6 sm:p-8 space-y-6">
+          
+          <div class="p-4 rounded-2xl border border-amber-200/80 bg-amber-50/70 text-xs text-amber-900 space-y-1.5">
+            <div class="flex items-center gap-2 font-bold text-amber-950">
               <i class="fa-solid fa-shield-halved text-amber-600 text-sm"></i>
-              Mandatory Security Verification Requirement
+              Mandatory Security 2FA Requirement
             </div>
-            <p class="text-amber-900 leading-relaxed">
+            <p class="text-amber-900 leading-relaxed font-medium">
               To protect your enterprise gateway credentials from unauthorized access, password modifications require live OTP authentication. 
               Click <strong>"Request OTP Code via Email"</strong> below to send a 6-digit code to <span class="font-bold underline">{{ profileForm.email }}</span>.
             </p>
@@ -209,12 +219,12 @@ import { LoaderService } from '../../services/loader.service';
                     [(ngModel)]="passwordForm.currentPassword"
                     name="currentPassword"
                     placeholder="Enter your current password"
-                    class="w-full pl-10 pr-10 py-2.5 border border-slate-200 rounded-xl text-xs font-semibold bg-white text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all"
+                    class="w-full pl-10 pr-10 py-3 border border-slate-300 rounded-2xl text-xs font-bold bg-white text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all shadow-xs"
                   />
                   <button
                     type="button"
                     (click)="showCurrentPass = !showCurrentPass"
-                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
+                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer">
                     <i class="fa-solid text-xs" [ngClass]="showCurrentPass ? 'fa-eye-slash' : 'fa-eye'"></i>
                   </button>
                 </div>
@@ -236,12 +246,12 @@ import { LoaderService } from '../../services/loader.service';
                     required
                     minlength="6"
                     placeholder="At least 6 characters"
-                    class="w-full pl-10 pr-10 py-2.5 border border-slate-200 rounded-xl text-xs font-semibold bg-white text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all"
+                    class="w-full pl-10 pr-10 py-3 border border-slate-300 rounded-2xl text-xs font-bold bg-white text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all shadow-xs"
                   />
                   <button
                     type="button"
                     (click)="showNewPass = !showNewPass"
-                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
+                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer">
                     <i class="fa-solid text-xs" [ngClass]="showNewPass ? 'fa-eye-slash' : 'fa-eye'"></i>
                   </button>
                 </div>
@@ -262,12 +272,12 @@ import { LoaderService } from '../../services/loader.service';
                     name="confirmPassword"
                     required
                     placeholder="Re-enter new password"
-                    class="w-full pl-10 pr-10 py-2.5 border border-slate-200 rounded-xl text-xs font-semibold bg-white text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all"
+                    class="w-full pl-10 pr-10 py-3 border border-slate-300 rounded-2xl text-xs font-bold bg-white text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all shadow-xs"
                   />
                   <button
                     type="button"
                     (click)="showConfirmPass = !showConfirmPass"
-                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
+                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer">
                     <i class="fa-solid text-xs" [ngClass]="showConfirmPass ? 'fa-eye-slash' : 'fa-eye'"></i>
                   </button>
                 </div>
@@ -277,7 +287,7 @@ import { LoaderService } from '../../services/loader.service';
               <div class="space-y-1.5">
                 <div class="flex items-center justify-between">
                   <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                    6-Digit OTP Code <span class="text-red-500">*</span>
+                    6-Digit Security OTP Code <span class="text-red-500">*</span>
                   </label>
                   <span *ngIf="otpSent" class="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
                     <i class="fa-solid fa-circle-check text-xs"></i>
@@ -296,8 +306,8 @@ import { LoaderService } from '../../services/loader.service';
                       name="otpCode"
                       required
                       maxlength="6"
-                      placeholder="Enter 6-digit code"
-                      class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-xs font-mono font-bold tracking-widest bg-white text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all"
+                      placeholder="123456"
+                      class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-2xl text-xs font-mono font-bold tracking-widest bg-white text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all shadow-xs"
                     />
                   </div>
 
@@ -306,7 +316,7 @@ import { LoaderService } from '../../services/loader.service';
                     type="button"
                     (click)="onRequestOtp()"
                     [disabled]="sendingOtp || otpCooldown > 0"
-                    class="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-all shrink-0 flex items-center gap-1.5 shadow-xs cursor-pointer">
+                    class="px-4 py-3 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white text-xs font-bold rounded-2xl transition-all shrink-0 flex items-center gap-1.5 shadow-xs cursor-pointer">
                     <i *ngIf="sendingOtp" class="fa-solid fa-circle-notch animate-spin text-xs"></i>
                     <i *ngIf="!sendingOtp" class="fa-solid fa-paper-plane text-xs"></i>
                     <span>
@@ -320,25 +330,26 @@ import { LoaderService } from '../../services/loader.service';
 
             <!-- Password Mismatch Warning -->
             <div *ngIf="passwordForm.newPassword && passwordForm.confirmPassword && passwordForm.newPassword !== passwordForm.confirmPassword"
-                 class="p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-semibold flex items-center gap-2">
+                 class="p-3.5 rounded-2xl bg-red-50 border border-red-200 text-red-600 text-xs font-bold flex items-center gap-2">
               <i class="fa-solid fa-triangle-exclamation"></i>
-              New password and confirmation password do not match.
+              <span>New password and confirmation password do not match.</span>
             </div>
 
             <!-- Form Submit Button -->
-            <div class="flex justify-end pt-2 border-t border-slate-100">
+            <div class="flex justify-end pt-3 border-t border-slate-100">
               <button
                 type="submit"
                 [disabled]="changingPassword || !passwordForm.newPassword || passwordForm.newPassword !== passwordForm.confirmPassword || !passwordForm.otp || passwordForm.otp.length !== 6"
-                class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer">
+                class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white text-xs font-extrabold rounded-2xl shadow-sm transition-all flex items-center gap-2 cursor-pointer">
                 <i *ngIf="changingPassword" class="fa-solid fa-circle-notch animate-spin text-xs"></i>
                 <i *ngIf="!changingPassword" class="fa-solid fa-shield-check text-xs"></i>
-                {{ changingPassword ? 'Updating Password...' : 'Verify OTP & Update Password' }}
+                <span>{{ changingPassword ? 'Updating Password...' : 'Verify OTP & Update Password' }}</span>
               </button>
             </div>
 
           </form>
         </div>
+
       </div>
 
     </div>
@@ -451,7 +462,6 @@ export class EnterpriseSettingsComponent implements OnInit {
             this.profile.phone = this.profileForm.phone;
           }
         }
-        // Sync session user
         if (this.currentUser) {
           this.sessionService.saveUser(
             this.profileForm.email,
