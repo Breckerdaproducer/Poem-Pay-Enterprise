@@ -381,7 +381,8 @@ export class EnterpriseService {
   }
 
   depositToApiKey(id: string, data: { amount: number; provider: string; phone_number: string }): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/v1/enterprise/portal/api-keys/${id}/deposit`, data, {
+    const payload = { ...data, key_id: id };
+    return this.http.post<any>(`${this.baseUrl}/v1/enterprise/portal/api-keys/deposit`, payload, {
       withCredentials: true,
     }).pipe(
       tap(() => {
@@ -392,7 +393,8 @@ export class EnterpriseService {
   }
 
   withdrawFromApiKey(id: string, data: { amount: number; provider: string; phone_number: string; account_name?: string }): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/v1/enterprise/portal/api-keys/${id}/withdraw`, data, {
+    const payload = { ...data, key_id: id };
+    return this.http.post<any>(`${this.baseUrl}/v1/enterprise/portal/api-keys/withdraw`, payload, {
       withCredentials: true,
     }).pipe(
       tap(() => {

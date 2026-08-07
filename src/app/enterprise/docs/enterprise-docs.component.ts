@@ -502,6 +502,62 @@ interface SandboxResult {
         </div>
       </div>
 
+      <!-- Developer Integration Guide: Live Modal & Webhook Status Flow -->
+      <div class="p-6 sm:p-8 rounded-3xl bg-slate-900 border border-slate-800 text-white space-y-6 shadow-xl relative overflow-hidden">
+        <div class="absolute -right-16 -top-16 w-64 h-64 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-400 text-lg">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-extrabold text-white">How to Implement Live Payment PIN Prompt & Modal Screens on Your Website</h3>
+            <p class="text-xs text-slate-400">Step-by-step developer architecture for seamless Mobile Money customer checkout & wallet funding</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+
+          <div class="p-4 rounded-2xl bg-slate-800/80 border border-slate-700/60 space-y-2 relative">
+            <div class="w-6 h-6 rounded-lg bg-indigo-500 text-white font-extrabold text-xs flex items-center justify-center">1</div>
+            <h4 class="font-bold text-xs text-indigo-200">1. Submit API Request</h4>
+            <p class="text-[11px] text-slate-400 leading-relaxed">
+              Send <code class="text-emerald-400 font-mono">POST /v1/enterprise/payments/request</code> (or deposit/withdraw) with header <code class="text-indigo-300 font-mono">x-api-key: sk_ent_live_...</code>.
+            </p>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-slate-800/80 border border-slate-700/60 space-y-2 relative">
+            <div class="w-6 h-6 rounded-lg bg-emerald-500 text-white font-extrabold text-xs flex items-center justify-center">2</div>
+            <h4 class="font-bold text-xs text-emerald-200">2. Display Loading Modal</h4>
+            <p class="text-[11px] text-slate-400 leading-relaxed">
+              Keep your checkout form open! Show a modal: <em>"USSD Prompt Sent. Please check phone and enter your Mobile Money PIN code..."</em>
+            </p>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-slate-800/80 border border-slate-700/60 space-y-2 relative">
+            <div class="w-6 h-6 rounded-lg bg-amber-500 text-white font-extrabold text-xs flex items-center justify-center">3</div>
+            <h4 class="font-bold text-xs text-amber-200">3. Live Status Telemetry</h4>
+            <p class="text-[11px] text-slate-400 leading-relaxed">
+              Listen for instant webhook HTTP POST callback to your server OR poll <code class="text-amber-300 font-mono">GET /v1/enterprise/payments/:reference/status</code> every 3s.
+            </p>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-slate-800/80 border border-slate-700/60 space-y-2 relative">
+            <div class="w-6 h-6 rounded-lg bg-blue-500 text-white font-extrabold text-xs flex items-center justify-center">4</div>
+            <h4 class="font-bold text-xs text-blue-200">4. Transition Modal Screen</h4>
+            <p class="text-[11px] text-slate-400 leading-relaxed">
+              When status changes to <span class="text-emerald-400 font-bold">APPROVED</span>, transition modal to Success screen! If <span class="text-red-400 font-bold">FAILED</span>, show error message.
+            </p>
+          </div>
+
+        </div>
+
+        <div class="p-4 rounded-2xl bg-indigo-950/50 border border-indigo-500/30 flex items-center gap-3 text-xs text-indigo-200">
+          <i class="fa-solid fa-shield-halved text-indigo-400 text-base shrink-0"></i>
+          <span><strong>Webhook Security:</strong> All webhook HTTP POST notifications sent to your registered <code class="font-mono text-indigo-300">webhook_url</code> contain a signed <code class="font-mono text-emerald-300">X-PoemPay-Signature</code> header generated via HMAC-SHA256 using your Webhook Secret Key.</span>
+        </div>
+      </div>
+
     </div>
   `
 })
@@ -541,8 +597,8 @@ export class EnterpriseDocsComponent implements OnInit {
       id: 'deposit',
       name: '2. Deposit Funds to Wallet',
       method: 'POST',
-      path: '/v1/enterprise/portal/api-keys/{api_key_id}/deposit',
-      description: 'Triggers Mobile Money deposit USSD prompt to top-up API Key wallet balance.',
+      path: '/v1/enterprise/payments/deposit',
+      description: 'Triggers Mobile Money deposit prompt to top-up API Key wallet balance.',
       badgeClass: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
       activeBadgeClass: 'bg-emerald-500 text-white'
     },
@@ -559,7 +615,7 @@ export class EnterpriseDocsComponent implements OnInit {
       id: 'withdraw',
       name: '4. Withdraw Payout from Wallet',
       method: 'POST',
-      path: '/v1/enterprise/portal/api-keys/{api_key_id}/withdraw',
+      path: '/v1/enterprise/payments/withdraw',
       description: 'Disburses available API Key wallet balance to destination Mobile Money accounts.',
       badgeClass: 'bg-amber-50 text-amber-700 border border-amber-200',
       activeBadgeClass: 'bg-amber-500 text-white'
@@ -629,14 +685,12 @@ export class EnterpriseDocsComponent implements OnInit {
   getEndpointUrl(): string {
     const base = this.getBaseUrl();
     if (this.selectedEndpoint === 'deposit') {
-      const keyId = this.sandboxKeyId || 'KEY_UUID_998124';
-      return `${base}/v1/enterprise/portal/api-keys/${keyId}/deposit`;
+      return `${base}/v1/enterprise/payments/deposit`;
     } else if (this.selectedEndpoint === 'status') {
       const ref = this.sandboxRef || 'ENT_TXN_1782950000_A1B2';
       return `${base}/v1/enterprise/payments/${ref}/status`;
     } else if (this.selectedEndpoint === 'withdraw') {
-      const keyId = this.sandboxKeyId || 'KEY_UUID_998124';
-      return `${base}/v1/enterprise/portal/api-keys/${keyId}/withdraw`;
+      return `${base}/v1/enterprise/payments/withdraw`;
     } else if (this.selectedEndpoint === 'webhook') {
       return `POST ${this.sandboxWebhookUrl || 'https://store.acme.com/api/v1/poempay/webhook'}`;
     } else if (this.selectedEndpoint === 'resolve') {
@@ -681,10 +735,8 @@ export class EnterpriseDocsComponent implements OnInit {
         currency: 'XAF'
       };
     } else if (this.selectedEndpoint === 'deposit') {
-      const keyId = this.sandboxKeyId || 'KEY_UUID_998124';
-      targetUrl = `${baseUrl}/v1/enterprise/portal/api-keys/${keyId}/deposit`;
+      targetUrl = `${baseUrl}/v1/enterprise/payments/deposit`;
       httpMethod = 'POST';
-      headers['Authorization'] = 'Bearer ' + (localStorage.getItem('enterprise_token') || 'sample_jwt');
       bodyPayload = {
         amount: Number(this.sandboxAmount),
         provider: this.sandboxProvider || 'MTN',
@@ -695,10 +747,8 @@ export class EnterpriseDocsComponent implements OnInit {
       targetUrl = `${baseUrl}/v1/enterprise/payments/${ref}/status`;
       httpMethod = 'GET';
     } else if (this.selectedEndpoint === 'withdraw') {
-      const keyId = this.sandboxKeyId || 'KEY_UUID_998124';
-      targetUrl = `${baseUrl}/v1/enterprise/portal/api-keys/${keyId}/withdraw`;
+      targetUrl = `${baseUrl}/v1/enterprise/payments/withdraw`;
       httpMethod = 'POST';
-      headers['Authorization'] = 'Bearer ' + (localStorage.getItem('enterprise_token') || 'sample_jwt');
       bodyPayload = {
         amount: Number(this.sandboxAmount),
         provider: this.sandboxProvider || 'MTN',
@@ -854,7 +904,7 @@ export class EnterpriseDocsComponent implements OnInit {
     } else if (this.selectedEndpoint === 'deposit') {
       return `curl -X POST ${fullUrl} \\
   -H "Content-Type: application/json" \\
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \\
+  -H "x-api-key: ${this.sandboxApiKey}" \\
   -d '{
     "amount": ${this.sandboxAmount},
     "provider": "${this.sandboxProvider}",
@@ -866,7 +916,7 @@ export class EnterpriseDocsComponent implements OnInit {
     } else if (this.selectedEndpoint === 'withdraw') {
       return `curl -X POST ${fullUrl} \\
   -H "Content-Type: application/json" \\
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \\
+  -H "x-api-key: ${this.sandboxApiKey}" \\
   -d '{
     "amount": ${this.sandboxAmount},
     "provider": "${this.sandboxProvider}",

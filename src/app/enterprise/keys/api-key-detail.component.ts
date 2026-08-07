@@ -461,7 +461,7 @@ import { WebsocketService } from '../../services/websocket.service';
       </div>
 
       <!-- Deposit Funds Modal -->
-      <div *ngIf="showDepositModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+      <div *ngIf="showDepositModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
         <div class="w-full max-w-md bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-7 space-y-5 shadow-2xl text-slate-900">
           
           <div class="flex items-center justify-between border-b border-slate-100 pb-3.5">
@@ -475,12 +475,13 @@ import { WebsocketService } from '../../services/websocket.service';
               </div>
             </div>
             
-            <button (click)="showDepositModal = false" class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
+            <button (click)="closeDepositModal()" class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
               <i class="fa-solid fa-xmark text-lg"></i>
             </button>
           </div>
 
-          <div class="space-y-4">
+          <!-- STEP 1: FORM -->
+          <div *ngIf="depositStep === 'FORM'" class="space-y-4">
             <div>
               <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Deposit Amount (XAF)</label>
               <input
@@ -542,23 +543,86 @@ import { WebsocketService } from '../../services/websocket.service';
                 <span>{{ depositHolderError }}</span>
               </div>
             </div>
+
+            <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+              <button (click)="closeDepositModal()" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-all cursor-pointer">
+                Cancel
+              </button>
+              <button (click)="onConfirmDeposit()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-sm flex items-center gap-2 cursor-pointer">
+                <i class="fa-solid fa-check"></i>
+                <span>Confirm & Push Prompt</span>
+              </button>
+            </div>
           </div>
 
-          <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
-            <button (click)="showDepositModal = false" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-all cursor-pointer">
-              Cancel
+          <!-- STEP 2: AWAITING PIN -->
+          <div *ngIf="depositStep === 'AWAITING_PIN'" class="py-6 text-center space-y-4">
+            <div class="relative w-20 h-20 mx-auto flex items-center justify-center">
+              <div class="absolute inset-0 rounded-full bg-emerald-400/20 animate-ping"></div>
+              <div class="relative w-16 h-16 rounded-full bg-emerald-50 border-2 border-emerald-500 flex items-center justify-center text-emerald-600 text-2xl shadow-md">
+                <i class="fa-solid fa-mobile-screen-button"></i>
+              </div>
+            </div>
+
+            <div class="space-y-1.5">
+              <h4 class="text-lg font-extrabold text-slate-900">USSD Prompt Pushed to Handset</h4>
+              <p class="text-xs text-slate-600 leading-relaxed max-w-xs mx-auto">
+                Please check <span class="font-bold text-slate-900 font-mono">{{ depositPhone }}</span> and enter your Mobile Money PIN code to authorize <span class="font-bold text-emerald-600">XAF {{ depositAmount | number:'1.0-0' }}</span>.
+              </p>
+            </div>
+
+            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center gap-2 text-xs text-slate-500 font-medium">
+              <i class="fa-solid fa-spinner fa-spin text-indigo-600"></i>
+              <span>Waiting for Campay live payment webhook status...</span>
+            </div>
+          </div>
+
+          <!-- STEP 3: SUCCESS -->
+          <div *ngIf="depositStep === 'SUCCESS'" class="py-6 text-center space-y-4 animate-in zoom-in-95 duration-200">
+            <div class="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-3xl mx-auto shadow-sm">
+              <i class="fa-solid fa-circle-check"></i>
+            </div>
+
+            <div class="space-y-1.5">
+              <h4 class="text-xl font-extrabold text-slate-900">Payment Confirmed!</h4>
+              <p class="text-xs text-slate-600 max-w-xs mx-auto">
+                <span class="font-extrabold text-emerald-700">XAF {{ depositAmount | number:'1.0-0' }}</span> has been successfully credited to your API Key Wallet balance.
+              </p>
+            </div>
+
+            <button (click)="closeDepositModal()" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition-all cursor-pointer">
+              Done & Close
             </button>
-            <button (click)="onConfirmDeposit()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-sm flex items-center gap-2 cursor-pointer">
-              <i class="fa-solid fa-check"></i>
-              <span>Confirm & Push Prompt</span>
-            </button>
+          </div>
+
+          <!-- STEP 4: FAILED -->
+          <div *ngIf="depositStep === 'FAILED'" class="py-6 text-center space-y-4 animate-in zoom-in-95 duration-200">
+            <div class="w-16 h-16 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-3xl mx-auto shadow-sm">
+              <i class="fa-solid fa-circle-xmark"></i>
+            </div>
+
+            <div class="space-y-1.5">
+              <h4 class="text-xl font-extrabold text-slate-900">Deposit Failed</h4>
+              <p class="text-xs text-red-600 bg-red-50 p-2.5 rounded-xl border border-red-200 font-medium">
+                {{ depositErrorMessage || 'Payment prompt was cancelled or timed out on handset.' }}
+              </p>
+            </div>
+
+            <div class="flex gap-2">
+              <button (click)="closeDepositModal()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all cursor-pointer">
+                Close
+              </button>
+              <button (click)="depositStep = 'FORM'" class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition-all cursor-pointer">
+                Try Again
+              </button>
+            </div>
           </div>
 
         </div>
       </div>
 
       <!-- Withdraw Funds Modal -->
-      <div *ngIf="showWithdrawModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+      <div *ngIf="showWithdrawModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
         <div class="w-full max-w-md bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-7 space-y-5 shadow-2xl text-slate-900">
           
           <div class="flex items-center justify-between border-b border-slate-100 pb-3.5">
@@ -572,12 +636,13 @@ import { WebsocketService } from '../../services/websocket.service';
               </div>
             </div>
             
-            <button (click)="showWithdrawModal = false" class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
+            <button (click)="closeWithdrawModal()" class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
               <i class="fa-solid fa-xmark text-lg"></i>
             </button>
           </div>
 
-          <div class="space-y-4">
+          <!-- STEP 1: FORM -->
+          <div *ngIf="withdrawStep === 'FORM'" class="space-y-4">
             <div>
               <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Withdrawal Amount (XAF)</label>
               <input
@@ -639,16 +704,79 @@ import { WebsocketService } from '../../services/websocket.service';
                 <span>{{ withdrawHolderError }}</span>
               </div>
             </div>
+
+            <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+              <button (click)="closeWithdrawModal()" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-all cursor-pointer">
+                Cancel
+              </button>
+              <button (click)="onConfirmWithdrawal()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-sm flex items-center gap-2 cursor-pointer">
+                <i class="fa-solid fa-paper-plane"></i>
+                <span>Confirm & Disburse</span>
+              </button>
+            </div>
           </div>
 
-          <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
-            <button (click)="showWithdrawModal = false" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-all cursor-pointer">
-              Cancel
+          <!-- STEP 2: AWAITING PIN / DISBURSING -->
+          <div *ngIf="withdrawStep === 'AWAITING_PIN'" class="py-6 text-center space-y-4">
+            <div class="relative w-20 h-20 mx-auto flex items-center justify-center">
+              <div class="absolute inset-0 rounded-full bg-indigo-400/20 animate-ping"></div>
+              <div class="relative w-16 h-16 rounded-full bg-indigo-50 border-2 border-indigo-500 flex items-center justify-center text-indigo-600 text-2xl shadow-md">
+                <i class="fa-solid fa-paper-plane"></i>
+              </div>
+            </div>
+
+            <div class="space-y-1.5">
+              <h4 class="text-lg font-extrabold text-slate-900">Disbursing Mobile Money Transfer</h4>
+              <p class="text-xs text-slate-600 leading-relaxed max-w-xs mx-auto">
+                Executing payout of <span class="font-bold text-slate-900">XAF {{ withdrawAmount | number:'1.0-0' }}</span> to recipient <span class="font-bold text-slate-900 font-mono">{{ withdrawPhone }}</span>.
+              </p>
+            </div>
+
+            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center gap-2 text-xs text-slate-500 font-medium">
+              <i class="fa-solid fa-spinner fa-spin text-indigo-600"></i>
+              <span>Waiting for operator network confirmation...</span>
+            </div>
+          </div>
+
+          <!-- STEP 3: SUCCESS -->
+          <div *ngIf="withdrawStep === 'SUCCESS'" class="py-6 text-center space-y-4 animate-in zoom-in-95 duration-200">
+            <div class="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-3xl mx-auto shadow-sm">
+              <i class="fa-solid fa-circle-check"></i>
+            </div>
+
+            <div class="space-y-1.5">
+              <h4 class="text-xl font-extrabold text-slate-900">Payout Disbursed!</h4>
+              <p class="text-xs text-slate-600 max-w-xs mx-auto">
+                <span class="font-extrabold text-emerald-700">XAF {{ withdrawAmount | number:'1.0-0' }}</span> was successfully transferred to {{ withdrawPhone }}.
+              </p>
+            </div>
+
+            <button (click)="closeWithdrawModal()" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition-all cursor-pointer">
+              Done & Close
             </button>
-            <button (click)="onConfirmWithdrawal()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-sm flex items-center gap-2 cursor-pointer">
-              <i class="fa-solid fa-paper-plane"></i>
-              <span>Disburse Payout Now</span>
-            </button>
+          </div>
+
+          <!-- STEP 4: FAILED -->
+          <div *ngIf="withdrawStep === 'FAILED'" class="py-6 text-center space-y-4 animate-in zoom-in-95 duration-200">
+            <div class="w-16 h-16 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-3xl mx-auto shadow-sm">
+              <i class="fa-solid fa-circle-xmark"></i>
+            </div>
+
+            <div class="space-y-1.5">
+              <h4 class="text-xl font-extrabold text-slate-900">Payout Failed</h4>
+              <p class="text-xs text-red-600 bg-red-50 p-2.5 rounded-xl border border-red-200 font-medium">
+                {{ withdrawErrorMessage || 'Payout cashout was rejected by operator.' }}
+              </p>
+            </div>
+
+            <div class="flex gap-2">
+              <button (click)="closeWithdrawModal()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all cursor-pointer">
+                Close
+              </button>
+              <button (click)="withdrawStep = 'FORM'" class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition-all cursor-pointer">
+                Try Again
+              </button>
+            </div>
           </div>
 
         </div>
@@ -665,6 +793,9 @@ export class ApiKeyDetailComponent implements OnInit, OnDestroy {
 
   // Deposit Top-up Modal State
   showDepositModal = false;
+  depositStep: 'FORM' | 'AWAITING_PIN' | 'SUCCESS' | 'FAILED' = 'FORM';
+  depositRef = '';
+  depositErrorMessage = '';
   depositAmount: number | null = null;
   depositProvider = 'MTN';
   depositPhone = '';
@@ -674,6 +805,9 @@ export class ApiKeyDetailComponent implements OnInit, OnDestroy {
 
   // Withdraw Payout Modal State
   showWithdrawModal = false;
+  withdrawStep: 'FORM' | 'AWAITING_PIN' | 'SUCCESS' | 'FAILED' = 'FORM';
+  withdrawRef = '';
+  withdrawErrorMessage = '';
   withdrawAmount: number | null = null;
   withdrawProvider = 'MTN';
   withdrawPhone = '';
@@ -691,6 +825,8 @@ export class ApiKeyDetailComponent implements OnInit, OnDestroy {
   permissionError = '';
 
   private subscriptions: Subscription[] = [];
+  private depositPollTimer: any = null;
+  private withdrawPollTimer: any = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -715,6 +851,40 @@ export class ApiKeyDetailComponent implements OnInit, OnDestroy {
       const wsSub = this.websocketService.enterpriseTransaction$.subscribe((msg: any) => {
         if (msg) {
           this.loadKeyDetails(true);
+
+          // Real-time status update for Deposit Modal
+          if (this.showDepositModal && this.depositStep === 'AWAITING_PIN') {
+            const isMatch = !this.depositRef || msg.reference === this.depositRef || msg.transaction_id === this.depositRef || msg.type === 'DEPOSIT';
+            if (isMatch) {
+              if (msg.status === 'APPROVED' || msg.status === 'SUCCESSFUL') {
+                this.depositStep = 'SUCCESS';
+                this.stopDepositPolling();
+                this.loadKeyDetails(true);
+              } else if (msg.status === 'FAILED' || msg.status === 'REJECTED') {
+                this.depositStep = 'FAILED';
+                this.depositErrorMessage = msg.reason || 'Payment prompt was cancelled or failed.';
+                this.stopDepositPolling();
+              }
+              this.cdr.markForCheck();
+            }
+          }
+
+          // Real-time status update for Withdrawal Modal
+          if (this.showWithdrawModal && this.withdrawStep === 'AWAITING_PIN') {
+            const isMatch = !this.withdrawRef || msg.reference === this.withdrawRef || msg.transaction_id === this.withdrawRef || msg.type === 'WITHDRAWAL';
+            if (isMatch) {
+              if (msg.status === 'APPROVED' || msg.status === 'SUCCESSFUL') {
+                this.withdrawStep = 'SUCCESS';
+                this.stopWithdrawPolling();
+                this.loadKeyDetails(true);
+              } else if (msg.status === 'FAILED' || msg.status === 'REJECTED') {
+                this.withdrawStep = 'FAILED';
+                this.withdrawErrorMessage = msg.reason || 'Payout cashout was rejected.';
+                this.stopWithdrawPolling();
+              }
+              this.cdr.markForCheck();
+            }
+          }
         }
       });
       this.subscriptions.push(wsSub);
@@ -722,7 +892,35 @@ export class ApiKeyDetailComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.stopDepositPolling();
+    this.stopWithdrawPolling();
     this.subscriptions.forEach(s => s.unsubscribe());
+  }
+
+  openDepositModal(): void {
+    this.depositStep = 'FORM';
+    this.depositRef = '';
+    this.depositErrorMessage = '';
+    this.showDepositModal = true;
+  }
+
+  closeDepositModal(): void {
+    this.stopDepositPolling();
+    this.showDepositModal = false;
+    this.depositStep = 'FORM';
+  }
+
+  openWithdrawModal(): void {
+    this.withdrawStep = 'FORM';
+    this.withdrawRef = '';
+    this.withdrawErrorMessage = '';
+    this.showWithdrawModal = true;
+  }
+
+  closeWithdrawModal(): void {
+    this.stopWithdrawPolling();
+    this.showWithdrawModal = false;
+    this.withdrawStep = 'FORM';
   }
 
   goBack(): void {
@@ -917,6 +1115,56 @@ export class ApiKeyDetailComponent implements OnInit, OnDestroy {
     });
   }
 
+  stopDepositPolling(): void {
+    if (this.depositPollTimer) {
+      clearInterval(this.depositPollTimer);
+      this.depositPollTimer = null;
+    }
+  }
+
+  stopWithdrawPolling(): void {
+    if (this.withdrawPollTimer) {
+      clearInterval(this.withdrawPollTimer);
+      this.withdrawPollTimer = null;
+    }
+  }
+
+  startDepositPolling(): void {
+    this.stopDepositPolling();
+    let pollCount = 0;
+    this.depositPollTimer = setInterval(() => {
+      pollCount++;
+      if (pollCount > 25) { // 75 seconds timeout fallback
+        this.stopDepositPolling();
+        if (this.depositStep === 'AWAITING_PIN') {
+          this.depositStep = 'FAILED';
+          this.depositErrorMessage = 'Transaction timed out. Please verify on your phone.';
+          this.cdr.markForCheck();
+        }
+        return;
+      }
+      this.loadKeyDetails(true);
+    }, 3000);
+  }
+
+  startWithdrawPolling(): void {
+    this.stopWithdrawPolling();
+    let pollCount = 0;
+    this.withdrawPollTimer = setInterval(() => {
+      pollCount++;
+      if (pollCount > 25) {
+        this.stopWithdrawPolling();
+        if (this.withdrawStep === 'AWAITING_PIN') {
+          this.withdrawStep = 'FAILED';
+          this.withdrawErrorMessage = 'Payout confirmation timed out. Check network operator.';
+          this.cdr.markForCheck();
+        }
+        return;
+      }
+      this.loadKeyDetails(true);
+    }, 3000);
+  }
+
   onConfirmDeposit(): void {
     if (!isPlatformBrowser(this.platformId) || !this.keyId) return;
 
@@ -944,13 +1192,16 @@ export class ApiKeyDetailComponent implements OnInit, OnDestroy {
       })
     ).subscribe({
       next: (res) => {
-        this.notification.success(res.message || 'Deposit processed and wallet updated successfully!');
-        this.showDepositModal = false;
-        this.depositAmount = null;
-        this.loadKeyDetails();
+        this.depositRef = res.reference || res.transaction_id || res.id || '';
+        this.depositStep = 'AWAITING_PIN';
+        this.startDepositPolling();
+        this.notification.info('Mobile Money PIN prompt pushed to handset. Please enter your PIN.');
+        this.cdr.markForCheck();
       },
       error: (err) => {
-        this.notification.error(err.error?.message || 'Deposit failed. Please check inputs.');
+        this.depositStep = 'FAILED';
+        this.depositErrorMessage = err.error?.message || 'Deposit failed. Please check inputs.';
+        this.cdr.markForCheck();
       }
     });
   }
@@ -989,13 +1240,16 @@ export class ApiKeyDetailComponent implements OnInit, OnDestroy {
       })
     ).subscribe({
       next: (res) => {
-        this.notification.success(res.message || 'Mobile Money withdrawal payout initiated successfully!');
-        this.showWithdrawModal = false;
-        this.withdrawAmount = null;
-        this.loadKeyDetails();
+        this.withdrawRef = res.reference || res.transaction_id || res.id || '';
+        this.withdrawStep = 'AWAITING_PIN';
+        this.startWithdrawPolling();
+        this.notification.info('Mobile Money payout transfer initiated. Waiting for operator network confirmation.');
+        this.cdr.markForCheck();
       },
       error: (err) => {
-        this.notification.error(err.error?.message || 'Withdrawal failed. Please check inputs.');
+        this.withdrawStep = 'FAILED';
+        this.withdrawErrorMessage = err.error?.message || 'Withdrawal failed. Please check inputs.';
+        this.cdr.markForCheck();
       }
     });
   }
