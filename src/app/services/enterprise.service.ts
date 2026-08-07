@@ -26,6 +26,7 @@ export interface EnterpriseApiKey {
   secret_key?: string; // Returned only on key generation
   environment: 'TEST' | 'LIVE';
   is_active: boolean;
+  is_withdrawal_enabled?: boolean;
   last_used_at?: string;
   created_at: string;
 }
@@ -380,6 +381,16 @@ export class EnterpriseService {
       tap(() => {
         this.getApiKeys().subscribe();
         this.getPortalAnalytics().subscribe();
+      })
+    );
+  }
+
+  updateApiKeyWithdrawalPermission(id: string, is_withdrawal_enabled: boolean): Observable<any> {
+    return this.http.patch<any>(`${this.baseUrl}/v1/enterprise/portal/api-keys/${id}/withdrawal-permission`, { is_withdrawal_enabled }, {
+      withCredentials: true,
+    }).pipe(
+      tap(() => {
+        this.getApiKeys().subscribe();
       })
     );
   }

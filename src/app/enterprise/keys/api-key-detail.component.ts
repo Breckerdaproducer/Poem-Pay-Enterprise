@@ -16,147 +16,268 @@ import { WebsocketService } from '../../services/websocket.service';
   template: `
     <div class="min-h-screen flex flex-col font-sans bg-slate-50 text-slate-900">
       
-      <!-- Top Navigation Header -->
-      <header class="border-b sticky top-0 z-40 bg-white/95 backdrop-blur-md px-4 sm:px-8 py-3.5 flex items-center justify-between border-slate-200 shadow-xs">
-        <div class="flex items-center gap-4">
-          <button (click)="goBack()" class="w-9 h-9 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 flex items-center justify-center transition-all text-slate-700">
-            <i class="fa-solid fa-arrow-left"></i>
+      <!-- Sticky Top Navigation Header -->
+      <header class="border-b sticky top-0 z-40 bg-white/90 backdrop-blur-md px-4 sm:px-8 py-3.5 flex items-center justify-between border-slate-200/80 shadow-xs">
+        <div class="flex items-center gap-3.5">
+          <button (click)="goBack()" title="Back to API Keys" class="w-9 h-9 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 flex items-center justify-center transition-all text-slate-700 shadow-2xs cursor-pointer">
+            <i class="fa-solid fa-arrow-left text-xs"></i>
           </button>
+          
           <div>
             <div class="flex items-center gap-2">
-              <h1 class="font-extrabold text-base leading-tight text-slate-900">{{ keyDetails?.key?.name || 'API Key Overview' }}</h1>
-              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border"
+              <h1 class="font-extrabold text-base leading-tight text-slate-900 tracking-tight">
+                {{ keyDetails?.key?.name || 'API Key Overview' }}
+              </h1>
+              
+              <!-- Environment Live Indicator Badge -->
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider border inline-flex items-center gap-1.5"
                     [ngClass]="keyDetails?.key?.environment === 'LIVE' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'">
+                <span class="w-1.5 h-1.5 rounded-full animate-pulse" [ngClass]="keyDetails?.key?.environment === 'LIVE' ? 'bg-emerald-500' : 'bg-amber-500'"></span>
                 {{ keyDetails?.key?.environment || 'LIVE' }}
               </span>
             </div>
-            <p class="text-xs font-mono text-slate-500 mt-0.5 flex items-center gap-2 flex-wrap">
-              <span>Secret Key: <strong class="text-indigo-700">{{ getMaskedKey(keyDetails?.key) }}</strong></span>
-              <button (click)="copyToClipboard(keyDetails?.key?.secret_key)" 
-                      title="Copy Secret API Key (sk_ent_...)"
-                      class="px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-indigo-600 transition-colors text-[10px] font-sans font-bold inline-flex items-center gap-1 border border-slate-200">
-                <i class="fa-solid fa-copy"></i> Copy Secret
-              </button>
-              <span class="text-slate-300">|</span>
-              <span>Public Key: <strong class="text-slate-700">{{ keyDetails?.key?.public_key || 'N/A' }}</strong></span>
-              <button (click)="copyToClipboard(keyDetails?.key?.public_key)" 
-                      title="Copy Public Key (pk_ent_...)"
-                      class="px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 transition-colors text-[10px] font-sans font-bold inline-flex items-center gap-1 border border-slate-200">
-                <i class="fa-solid fa-copy"></i> Copy Public
-              </button>
+            
+            <p class="text-[11px] font-medium text-slate-500 mt-0.5 flex items-center gap-2">
+              <span>API Key ID: <code class="font-mono font-bold text-slate-700">{{ keyId || 'N/A' }}</code></span>
+              <span class="text-slate-300">•</span>
+              <span>Created {{ (keyDetails?.key?.created_at | date:'mediumDate') || 'Recently' }}</span>
             </p>
           </div>
         </div>
 
-        <div class="flex items-center gap-3">
-          <button (click)="showDepositModal = true" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-xs flex items-center gap-2">
-            <i class="fa-solid fa-plus-circle text-xs"></i>
-            <span>Deposit Funds</span>
+        <!-- Header Action Buttons -->
+        <div class="flex items-center gap-2.5">
+          <button (click)="showDepositModal = true" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm hover:shadow flex items-center gap-2 cursor-pointer">
+            <i class="fa-solid fa-circle-plus text-xs"></i>
+            <span>Deposit Top-up</span>
           </button>
 
-          <button (click)="showWithdrawModal = true" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-xs flex items-center gap-2">
+          <button (click)="showWithdrawModal = true" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm hover:shadow flex items-center gap-2 cursor-pointer">
             <i class="fa-solid fa-hand-holding-dollar text-xs"></i>
-            <span>Withdraw Funds</span>
+            <span>Withdraw Payout</span>
           </button>
         </div>
       </header>
 
-      <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-8 animate-in fade-in duration-500">
+      <!-- Main Container Body -->
+      <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6 animate-in fade-in duration-500">
+
+        <!-- 1. Hero Credential Banner Card -->
+        <div class="p-6 sm:p-8 rounded-3xl bg-slate-900 text-white shadow-xl relative overflow-hidden space-y-6">
+          <div class="absolute -right-16 -bottom-16 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+          
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+            
+            <div class="space-y-2">
+              <div class="flex items-center gap-2">
+                <span class="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center text-sm">
+                  <i class="fa-solid fa-key"></i>
+                </span>
+                <h2 class="text-xl font-extrabold text-white tracking-tight">API Key Credentials</h2>
+              </div>
+              <p class="text-xs text-slate-400 max-w-xl leading-relaxed">
+                Use your Secret Key (<code class="text-emerald-400 font-mono font-bold">sk_ent_live_...</code>) in the <code class="text-indigo-300 font-mono font-bold">x-api-key</code> HTTP header for all B2B API integrations.
+              </p>
+            </div>
+
+            <!-- Secret Key Reveal & Copy Box -->
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+              
+              <!-- Secret Key Pill -->
+              <div class="p-3 rounded-2xl bg-slate-800/90 border border-slate-700/80 font-mono text-xs text-emerald-400 flex items-center justify-between gap-3 shadow-inner">
+                <div class="flex items-center gap-2">
+                  <i class="fa-solid fa-lock text-slate-500 text-xs"></i>
+                  <span class="font-bold select-all">
+                    {{ showSecretKey ? (keyDetails?.key?.secret_key || getMaskedKey(keyDetails?.key)) : getMaskedKey(keyDetails?.key) }}
+                  </span>
+                </div>
+
+                <div class="flex items-center gap-1.5 ml-3 border-l border-slate-700/80 pl-2">
+                  <button 
+                    (click)="showSecretKey = !showSecretKey" 
+                    title="{{ showSecretKey ? 'Hide Secret Key' : 'Reveal Secret Key' }}"
+                    class="text-slate-400 hover:text-white transition-colors text-xs p-1 cursor-pointer">
+                    <i class="fa-solid" [ngClass]="showSecretKey ? 'fa-eye-slash' : 'fa-eye'"></i>
+                  </button>
+
+                  <button 
+                    (click)="copyToClipboard(keyDetails?.key?.secret_key)" 
+                    title="Copy Secret API Key"
+                    class="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-sans font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer">
+                    <i class="fa-regular fa-copy"></i>
+                    <span>Copy</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Public Key Pill -->
+              <div class="p-3 rounded-2xl bg-slate-800/40 border border-slate-800 font-mono text-xs text-slate-300 flex items-center justify-between gap-2">
+                <span class="text-slate-500 font-sans text-[11px] font-bold">Public Key:</span>
+                <span class="font-bold text-slate-200 select-all">{{ keyDetails?.key?.public_key || 'N/A' }}</span>
+                <button (click)="copyToClipboard(keyDetails?.key?.public_key)" class="text-slate-400 hover:text-white transition-colors text-xs p-1 cursor-pointer">
+                  <i class="fa-regular fa-copy"></i>
+                </button>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 2. API Key Permissions & Security Controls Card -->
+        <div class="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-xs space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            
+            <div class="flex items-start gap-3.5">
+              <div class="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shrink-0 mt-0.5">
+                <i class="fa-solid fa-shield-halved text-base"></i>
+              </div>
+              
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <h3 class="text-sm font-extrabold text-slate-900">
+                    API Key Payout & Withdrawal Permissions
+                  </h3>
+                  
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider border"
+                        [ngClass]="keyDetails?.key?.is_withdrawal_enabled ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-600 border-slate-200'">
+                    {{ keyDetails?.key?.is_withdrawal_enabled ? 'Withdrawals Enabled' : 'Withdrawals Restricted' }}
+                  </span>
+                </div>
+                
+                <p class="text-xs text-slate-500 max-w-2xl leading-relaxed">
+                  Control whether programmatic payouts (<code class="font-mono text-indigo-700 font-bold bg-indigo-50 px-1.5 py-0.5 rounded">POST /v1/enterprise/portal/api-keys/:id/withdraw</code>) can be executed using this Secret API Key. Requires 2FA OTP verification to change.
+                </p>
+              </div>
+            </div>
+
+            <!-- OTP Protected Switch -->
+            <div class="flex items-center gap-3 shrink-0 self-end sm:self-auto">
+              <span class="text-xs font-bold text-slate-700">Allow API Key Withdrawals:</span>
+              <button 
+                type="button" 
+                (click)="openWithdrawalPermissionModal(!keyDetails?.key?.is_withdrawal_enabled)"
+                [ngClass]="keyDetails?.key?.is_withdrawal_enabled ? 'bg-indigo-600' : 'bg-slate-300'"
+                class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none shadow-xs">
+                <span 
+                  [ngClass]="keyDetails?.key?.is_withdrawal_enabled ? 'translate-x-5' : 'translate-x-0'"
+                  class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out">
+                </span>
+              </button>
+            </div>
+
+          </div>
+        </div>
         
-        <!-- Key Info & Wallet KPI Grid -->
+        <!-- 3. KPI Wallet Metrics Grid (4 Stat Cards) -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           
-          <!-- KPI 1: Available Balance -->
-          <div class="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs relative overflow-hidden">
+          <!-- KPI 1: Available Wallet Balance -->
+          <div class="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-xs hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
             <div class="flex items-center justify-between">
               <div class="w-11 h-11 rounded-xl flex items-center justify-center text-emerald-600 bg-emerald-50 border border-emerald-100">
                 <i class="fa-solid fa-wallet text-lg"></i>
               </div>
-              <span class="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">Available Wallet</span>
+              <span class="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                Available Wallet
+              </span>
             </div>
-            <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-4">AVAILABLE WALLET BALANCE</p>
+            <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mt-4">AVAILABLE BALANCE</p>
             <h3 class="text-2xl sm:text-3xl font-extrabold mt-1 text-emerald-600 tracking-tight">
-              XAF {{ keyDetails?.wallet?.available_balance | number:'1.2-2' }}
+              XAF {{ (keyDetails?.wallet?.available_balance || 0) | number:'1.2-2' }}
             </h3>
-            <p class="text-xs mt-2 font-medium text-slate-500">Ready for payouts or API usage</p>
+            <p class="text-xs mt-2 font-semibold text-slate-500 flex items-center gap-1">
+              <i class="fa-solid fa-circle-check text-emerald-500 text-[10px]"></i> Ready for payouts or API charges
+            </p>
           </div>
 
-          <!-- KPI 2: Total Volume Processed -->
-          <div class="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs relative overflow-hidden">
+          <!-- KPI 2: Gross Volume Processed -->
+          <div class="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-xs hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
             <div class="flex items-center justify-between">
               <div class="w-11 h-11 rounded-xl flex items-center justify-center text-indigo-600 bg-indigo-50 border border-indigo-100">
                 <i class="fa-solid fa-chart-line text-lg"></i>
               </div>
-              <span class="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">Gross Volume</span>
+              <span class="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+                Gross Volume
+              </span>
             </div>
-            <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-4">TOTAL PROCESSED VOLUME</p>
+            <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mt-4">TOTAL PROCESSED VOLUME</p>
             <h3 class="text-2xl sm:text-3xl font-extrabold mt-1 text-slate-900 tracking-tight">
-              XAF {{ keyDetails?.wallet?.total_volume | number:'1.2-2' }}
+              XAF {{ (keyDetails?.wallet?.total_volume || 0) | number:'1.2-2' }}
             </h3>
-            <p class="text-xs mt-2 font-medium text-slate-500">Via this API Key</p>
+            <p class="text-xs mt-2 font-medium text-slate-500">Processed via this API Key</p>
           </div>
 
-          <!-- KPI 3: Total Deposited -->
-          <div class="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs relative overflow-hidden">
+          <!-- KPI 3: Total Deposited Top-ups -->
+          <div class="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-xs hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
             <div class="flex items-center justify-between">
               <div class="w-11 h-11 rounded-xl flex items-center justify-center text-blue-600 bg-blue-50 border border-blue-100">
                 <i class="fa-solid fa-circle-arrow-down text-lg"></i>
               </div>
-              <span class="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">Total Top-ups</span>
+              <span class="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                Total Top-ups
+              </span>
             </div>
-            <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-4">TOTAL DEPOSITED</p>
+            <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mt-4">TOTAL DEPOSITED</p>
             <h3 class="text-2xl sm:text-3xl font-extrabold mt-1 text-blue-600 tracking-tight">
-              XAF {{ keyDetails?.wallet?.total_deposits | number:'1.2-2' }}
+              XAF {{ (keyDetails?.wallet?.total_deposits || 0) | number:'1.2-2' }}
             </h3>
-            <p class="text-xs mt-2 font-medium text-slate-500">Mobile Money Top-ups</p>
+            <p class="text-xs mt-2 font-medium text-slate-500">Mobile Money Wallet Top-ups</p>
           </div>
 
-          <!-- KPI 4: Total Withdrawn -->
-          <div class="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs relative overflow-hidden">
+          <!-- KPI 4: Total Withdrawn Payouts -->
+          <div class="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-xs hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
             <div class="flex items-center justify-between">
               <div class="w-11 h-11 rounded-xl flex items-center justify-center text-purple-600 bg-purple-50 border border-purple-100">
                 <i class="fa-solid fa-building-columns text-lg"></i>
               </div>
-              <span class="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-200">Total Payouts</span>
+              <span class="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
+                Total Payouts
+              </span>
             </div>
-            <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-4">TOTAL WITHDRAWN</p>
-            <h3 class="text-2xl sm:text-3xl font-extrabold mt-1 text-slate-900 tracking-tight">
-              XAF {{ keyDetails?.wallet?.total_withdrawn | number:'1.2-2' }}
+            <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mt-4">TOTAL WITHDRAWN</p>
+            <h3 class="text-2xl sm:text-3xl font-extrabold mt-1 text-purple-700 tracking-tight">
+              XAF {{ (keyDetails?.wallet?.total_withdrawn || 0) | number:'1.2-2' }}
             </h3>
-            <p class="text-xs mt-2 font-medium text-slate-500">Cashouts processed</p>
+            <p class="text-xs mt-2 font-medium text-slate-500">Cashout payouts processed</p>
           </div>
 
         </div>
 
-        <!-- Wallet History Tables & Tabs -->
-        <div class="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-6">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+        <!-- 4. Wallet History Tables & Tabs Container -->
+        <div class="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-xs space-y-6">
+          
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/80 pb-4">
             
+            <!-- Segmented History Tabs -->
             <div class="flex items-center gap-4">
               <button 
                 (click)="activeHistoryTab = 'withdrawals'" 
                 [class.border-indigo-600]="activeHistoryTab === 'withdrawals'" 
                 [class.text-indigo-600]="activeHistoryTab === 'withdrawals'"
-                class="pb-2 text-xs font-bold border-b-2 border-transparent transition-all flex items-center gap-2 text-slate-600 hover:text-slate-900"
-              >
+                class="pb-2 text-xs font-bold border-b-2 border-transparent transition-all flex items-center gap-2 text-slate-600 hover:text-slate-900 cursor-pointer">
                 <i class="fa-solid fa-arrow-up-from-bracket"></i>
                 <span>Withdrawal Payouts</span>
-                <span class="px-2 py-0.5 text-[10px] bg-indigo-50 text-indigo-700 rounded-full font-bold border border-indigo-200">{{ keyDetails?.recent_withdrawals?.length || 0 }}</span>
+                <span class="px-2 py-0.5 text-[10px] bg-indigo-50 text-indigo-700 rounded-full font-bold border border-indigo-200">
+                  {{ keyDetails?.recent_withdrawals?.length || 0 }}
+                </span>
               </button>
 
               <button 
                 (click)="activeHistoryTab = 'deposits'" 
                 [class.border-emerald-600]="activeHistoryTab === 'deposits'" 
                 [class.text-emerald-600]="activeHistoryTab === 'deposits'"
-                class="pb-2 text-xs font-bold border-b-2 border-transparent transition-all flex items-center gap-2 text-slate-600 hover:text-slate-900"
-              >
+                class="pb-2 text-xs font-bold border-b-2 border-transparent transition-all flex items-center gap-2 text-slate-600 hover:text-slate-900 cursor-pointer">
                 <i class="fa-solid fa-arrow-down-to-bracket"></i>
                 <span>Deposit Top-ups</span>
-                <span class="px-2 py-0.5 text-[10px] bg-emerald-50 text-emerald-700 rounded-full font-bold border border-emerald-200">{{ keyDetails?.recent_deposits?.length || 0 }}</span>
+                <span class="px-2 py-0.5 text-[10px] bg-emerald-50 text-emerald-700 rounded-full font-bold border border-emerald-200">
+                  {{ keyDetails?.recent_deposits?.length || 0 }}
+                </span>
               </button>
             </div>
 
-            <button (click)="loadKeyDetails()" class="px-3.5 py-1.5 border border-slate-200 rounded-xl text-xs font-bold flex items-center gap-2 bg-slate-50 text-slate-700 hover:bg-slate-100">
+            <!-- Refresh Button -->
+            <button (click)="loadKeyDetails()" class="px-3.5 py-1.5 border border-slate-200/80 rounded-xl text-xs font-bold flex items-center gap-2 bg-slate-50 text-slate-700 hover:bg-slate-100 cursor-pointer transition-all">
               <i class="fa-solid fa-arrows-rotate text-xs"></i> Refresh History
             </button>
           </div>
@@ -165,38 +286,41 @@ import { WebsocketService } from '../../services/websocket.service';
           <div *ngIf="activeHistoryTab === 'withdrawals'" class="overflow-x-auto">
             <table class="w-full text-left text-xs border-collapse">
               <thead>
-                <tr class="border-b border-slate-200 bg-slate-50 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                  <th class="py-3 px-4">Payout Ref</th>
-                  <th class="py-3 px-4">Provider</th>
-                  <th class="py-3 px-4">Recipient Phone</th>
-                  <th class="py-3 px-4">Account Holder</th>
-                  <th class="py-3 px-4">Amount</th>
-                  <th class="py-3 px-4">Charges</th>
-                  <th class="py-3 px-4">Status</th>
-                  <th class="py-3 px-4">Date</th>
+                <tr class="border-b border-slate-200 bg-slate-50/70 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
+                  <th class="py-3.5 px-4">Payout Ref</th>
+                  <th class="py-3.5 px-4">Provider</th>
+                  <th class="py-3.5 px-4">Recipient Phone</th>
+                  <th class="py-3.5 px-4">Account Holder</th>
+                  <th class="py-3.5 px-4">Amount</th>
+                  <th class="py-3.5 px-4">Charges</th>
+                  <th class="py-3.5 px-4">Status</th>
+                  <th class="py-3.5 px-4">Date</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 text-slate-900">
-                <tr *ngFor="let w of keyDetails?.recent_withdrawals" class="hover:bg-slate-50 transition-colors">
+                <tr *ngFor="let w of keyDetails?.recent_withdrawals" class="hover:bg-slate-50/80 transition-colors">
                   <td class="py-3.5 px-4 font-mono font-bold text-indigo-700">{{ w.reference }}</td>
                   <td class="py-3.5 px-4 font-bold">
-                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border" [ngClass]="w.provider === 'MTN' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-orange-50 text-orange-700 border-orange-200'">
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase border" [ngClass]="w.provider === 'MTN' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-orange-50 text-orange-700 border-orange-200'">
                       {{ w.provider }}
                     </span>
                   </td>
                   <td class="py-3.5 px-4 font-semibold">{{ w.phone_number }}</td>
-                  <td class="py-3.5 px-4 text-slate-600">{{ w.account_name || 'N/A' }}</td>
+                  <td class="py-3.5 px-4 text-slate-600 font-medium">{{ w.account_name || 'N/A' }}</td>
                   <td class="py-3.5 px-4 font-bold text-purple-700">XAF {{ w.amount | number:'1.2-2' }}</td>
                   <td class="py-3.5 px-4 font-semibold text-amber-600">XAF {{ (w.fee || 0) | number:'1.2-2' }}</td>
                   <td class="py-3.5 px-4">
-                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
                       {{ w.status }}
                     </span>
                   </td>
-                  <td class="py-3.5 px-4 text-slate-400">{{ w.created_at | date:'medium' }}</td>
+                  <td class="py-3.5 px-4 text-slate-400 font-medium">{{ w.created_at | date:'medium' }}</td>
                 </tr>
                 <tr *ngIf="!keyDetails?.recent_withdrawals || keyDetails?.recent_withdrawals?.length === 0">
-                  <td colspan="8" class="py-8 text-center text-slate-400">No withdrawals recorded for this API key yet. Click "Withdraw Funds" above to cash out.</td>
+                  <td colspan="8" class="py-12 text-center text-slate-400 font-medium">
+                    <i class="fa-solid fa-inbox text-2xl text-slate-300 mb-2 block"></i>
+                    No withdrawals recorded for this API key yet. Click "Withdraw Payout" above to disburse funds.
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -206,21 +330,21 @@ import { WebsocketService } from '../../services/websocket.service';
           <div *ngIf="activeHistoryTab === 'deposits'" class="overflow-x-auto">
             <table class="w-full text-left text-xs border-collapse">
               <thead>
-                <tr class="border-b border-slate-200 bg-slate-50 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                  <th class="py-3 px-4">Deposit Ref</th>
-                  <th class="py-3 px-4">Provider</th>
-                  <th class="py-3 px-4">Payer Phone</th>
-                  <th class="py-3 px-4">Amount</th>
-                  <th class="py-3 px-4">Charges</th>
-                  <th class="py-3 px-4">Status</th>
-                  <th class="py-3 px-4">Date</th>
+                <tr class="border-b border-slate-200 bg-slate-50/70 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
+                  <th class="py-3.5 px-4">Deposit Ref</th>
+                  <th class="py-3.5 px-4">Provider</th>
+                  <th class="py-3.5 px-4">Payer Phone</th>
+                  <th class="py-3.5 px-4">Amount</th>
+                  <th class="py-3.5 px-4">Charges</th>
+                  <th class="py-3.5 px-4">Status</th>
+                  <th class="py-3.5 px-4">Date</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 text-slate-900">
-                <tr *ngFor="let d of keyDetails?.recent_deposits" class="hover:bg-slate-50 transition-colors">
+                <tr *ngFor="let d of keyDetails?.recent_deposits" class="hover:bg-slate-50/80 transition-colors">
                   <td class="py-3.5 px-4 font-mono font-bold text-emerald-700">{{ d.reference }}</td>
                   <td class="py-3.5 px-4 font-bold">
-                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border" [ngClass]="d.provider === 'MTN' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-orange-50 text-orange-700 border-orange-200'">
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase border" [ngClass]="d.provider === 'MTN' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-orange-50 text-orange-700 border-orange-200'">
                       {{ d.provider }}
                     </span>
                   </td>
@@ -228,14 +352,17 @@ import { WebsocketService } from '../../services/websocket.service';
                   <td class="py-3.5 px-4 font-bold text-emerald-700">XAF {{ d.amount | number:'1.2-2' }}</td>
                   <td class="py-3.5 px-4 font-semibold text-amber-600">XAF {{ (d.fee || 0) | number:'1.2-2' }}</td>
                   <td class="py-3.5 px-4">
-                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
                       {{ d.status }}
                     </span>
                   </td>
-                  <td class="py-3.5 px-4 text-slate-400">{{ d.created_at | date:'medium' }}</td>
+                  <td class="py-3.5 px-4 text-slate-400 font-medium">{{ d.created_at | date:'medium' }}</td>
                 </tr>
                 <tr *ngIf="!keyDetails?.recent_deposits || keyDetails?.recent_deposits?.length === 0">
-                  <td colspan="7" class="py-8 text-center text-slate-400">No deposit top-ups recorded for this API key yet. Click "Deposit Funds" above to add money.</td>
+                  <td colspan="7" class="py-12 text-center text-slate-400 font-medium">
+                    <i class="fa-solid fa-inbox text-2xl text-slate-300 mb-2 block"></i>
+                    No deposit top-ups recorded for this API key yet. Click "Deposit Top-up" above to add money.
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -245,18 +372,105 @@ import { WebsocketService } from '../../services/websocket.service';
 
       </main>
 
-      <!-- Deposit Funds Modal -->
-      <div *ngIf="showDepositModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-        <div class="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 space-y-5 shadow-2xl text-slate-900">
-          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-            <div>
-              <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
-                <i class="fa-solid fa-plus-circle text-emerald-600"></i> Deposit Wallet Funds
-              </h3>
-              <p class="text-xs text-slate-500">Real-time Mobile Money payment prompt</p>
+      <!-- 2FA OTP Security Verification Modal -->
+      <div *ngIf="showOtpPermissionModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+        <div class="w-full max-w-md bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-7 space-y-5 shadow-2xl text-slate-900">
+          
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3.5">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
+                <i class="fa-solid fa-lock text-sm"></i>
+              </div>
+              <div>
+                <h3 class="text-base font-extrabold text-slate-900 leading-tight">Security 2FA OTP Verification</h3>
+                <p class="text-xs text-slate-500">Authorize API Key permission update</p>
+              </div>
             </div>
-            <button (click)="showDepositModal = false" class="text-slate-400 hover:text-slate-600">
-              <i class="fa-solid fa-xmark text-base"></i>
+            
+            <button (click)="closePermissionOtpModal()" class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
+              <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+          </div>
+
+          <div class="space-y-4">
+            <div class="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-200/80 text-xs text-indigo-900 space-y-1.5">
+              <p class="font-bold flex items-center gap-1.5 text-indigo-950">
+                <i class="fa-solid fa-shield-check text-indigo-600"></i>
+                <span>Action: {{ pendingWithdrawalPermissionState ? 'Enable API Key Payout Withdrawals' : 'Disable API Key Payout Withdrawals' }}</span>
+              </p>
+              <p class="text-[11px] text-indigo-700 leading-relaxed">
+                An OTP verification code will be dispatched to your registered enterprise account email to confirm this permission change.
+              </p>
+            </div>
+
+            <div *ngIf="!permissionOtpSent" class="text-center pt-2">
+              <button 
+                (click)="requestPermissionOtp()" 
+                [disabled]="permissionOtpSending"
+                class="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50">
+                <i *ngIf="!permissionOtpSending" class="fa-solid fa-paper-plane"></i>
+                <i *ngIf="permissionOtpSending" class="fa-solid fa-circle-notch fa-spin"></i>
+                <span>{{ permissionOtpSending ? 'Sending 2FA OTP Code...' : 'Send Security OTP Code to Email' }}</span>
+              </button>
+            </div>
+
+            <div *ngIf="permissionOtpSent" class="space-y-3.5">
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Enter 6-Digit OTP Code</label>
+                <input
+                  type="text"
+                  [(ngModel)]="permissionOtpCode"
+                  maxlength="6"
+                  placeholder="123456"
+                  class="w-full px-4 py-3 border border-slate-300 rounded-2xl text-base font-mono font-extrabold tracking-widest text-center text-slate-900 bg-white focus:border-indigo-500 focus:outline-none shadow-xs"
+                />
+              </div>
+
+              <p *ngIf="permissionError" class="text-xs font-bold text-red-600 flex items-center gap-1.5">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span>{{ permissionError }}</span>
+              </p>
+
+              <div class="flex items-center gap-3 pt-2">
+                <button 
+                  (click)="requestPermissionOtp()" 
+                  [disabled]="permissionOtpSending" 
+                  class="w-1/3 py-2.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 cursor-pointer">
+                  Resend OTP
+                </button>
+                
+                <button 
+                  (click)="confirmPermissionWithOtp()" 
+                  [disabled]="permissionOtpVerifying || !permissionOtpCode || permissionOtpCode.length < 6"
+                  class="w-2/3 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50">
+                  <i *ngIf="!permissionOtpVerifying" class="fa-solid fa-check-circle"></i>
+                  <i *ngIf="permissionOtpVerifying" class="fa-solid fa-circle-notch fa-spin"></i>
+                  <span>{{ permissionOtpVerifying ? 'Verifying OTP...' : 'Verify OTP & Apply' }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Deposit Funds Modal -->
+      <div *ngIf="showDepositModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+        <div class="w-full max-w-md bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-7 space-y-5 shadow-2xl text-slate-900">
+          
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3.5">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
+                <i class="fa-solid fa-plus-circle text-sm"></i>
+              </div>
+              <div>
+                <h3 class="text-base font-extrabold text-slate-900 leading-tight">Deposit Wallet Funds</h3>
+                <p class="text-xs text-slate-500">Real-time Mobile Money payment prompt</p>
+              </div>
+            </div>
+            
+            <button (click)="showDepositModal = false" class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
+              <i class="fa-solid fa-xmark text-lg"></i>
             </button>
           </div>
 
@@ -267,12 +481,12 @@ import { WebsocketService } from '../../services/websocket.service';
                 type="number"
                 [(ngModel)]="depositAmount"
                 placeholder="e.g. 100000"
-                class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 bg-white focus:border-indigo-500 focus:outline-none"
+                class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 bg-white focus:border-indigo-500 focus:outline-none shadow-xs"
               />
             </div>
 
             <!-- Fee Breakdown Pill for Deposit -->
-            <div *ngIf="depositAmount && depositAmount > 0" class="p-3.5 rounded-xl bg-indigo-50 border border-indigo-200 text-xs space-y-1.5 text-indigo-900">
+            <div *ngIf="depositAmount && depositAmount > 0" class="p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-200/80 text-xs space-y-1.5 text-indigo-900">
               <div class="flex justify-between">
                 <span>Base Deposit Amount:</span>
                 <span class="font-bold">XAF {{ depositAmount | number:'1.0-0' }}</span>
@@ -281,11 +495,11 @@ import { WebsocketService } from '../../services/websocket.service';
                 <span>+ 2% Deposit Top-up Fee:</span>
                 <span class="font-bold">+ XAF {{ (depositAmount * 0.02) | number:'1.0-0' }}</span>
               </div>
-              <div class="flex justify-between">
+              <div class="flex justify-between border-t border-indigo-200/60 pt-1 font-bold">
                 <span>Net Wallet Credit:</span>
-                <span class="font-bold text-emerald-700">XAF {{ depositAmount | number:'1.0-0' }}</span>
+                <span class="text-emerald-700">XAF {{ depositAmount | number:'1.0-0' }}</span>
               </div>
-              <div class="flex justify-between pt-1.5 border-t border-indigo-200 font-extrabold text-sm text-indigo-900">
+              <div class="flex justify-between pt-1.5 border-t border-indigo-200 font-extrabold text-sm text-indigo-950">
                 <span>Total Mobile Money Charge:</span>
                 <span>XAF {{ (depositAmount * 1.02) | number:'1.0-0' }}</span>
               </div>
@@ -295,75 +509,70 @@ import { WebsocketService } from '../../services/websocket.service';
               <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Mobile Money Provider</label>
               <select
                 [(ngModel)]="depositProvider"
-                class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-xs font-bold bg-white text-slate-900 focus:border-indigo-500 focus:outline-none"
-              >
+                class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-xs font-bold bg-white text-slate-900 focus:border-indigo-500 focus:outline-none shadow-xs">
                 <option value="MTN">MTN MoMo (Cameroon)</option>
                 <option value="ORANGE">Orange Money (Cameroon)</option>
               </select>
             </div>
 
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Payer Phone Number</label>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Payer Mobile Money Phone</label>
               <input
                 type="text"
                 [(ngModel)]="depositPhone"
                 (blur)="onDepositPhoneBlur()"
                 placeholder="237670000000"
-                class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-xs font-bold font-mono bg-white text-slate-900 focus:border-indigo-500 focus:outline-none"
+                class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-900 bg-white focus:border-indigo-500 focus:outline-none shadow-xs"
               />
-              <p class="text-[10px] text-slate-400 mt-1 font-sans">Must start with country code 237 (e.g. 237670000000)</p>
-              <div *ngIf="depositHolderLoading" class="text-xs text-indigo-600 font-semibold flex items-center gap-1.5 mt-2">
-                <i class="fa-solid fa-circle-notch fa-spin text-xs"></i> Verifying account holder with Campay...
+              
+              <div *ngIf="depositHolderLoading" class="mt-1.5 text-xs text-indigo-600 flex items-center gap-1.5 font-medium">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <span>Verifying account holder name...</span>
               </div>
-              <div *ngIf="depositHolderName" class="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-center gap-2 mt-2 font-medium">
-                <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
-                <span>Account Holder Name: <strong class="font-extrabold text-slate-900">{{ depositHolderName }}</strong></span>
+
+              <div *ngIf="depositHolderName" class="mt-1.5 text-xs text-emerald-700 font-bold flex items-center gap-1.5 bg-emerald-50 p-2 rounded-xl border border-emerald-200">
+                <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                <span>Verified Name: {{ depositHolderName }}</span>
               </div>
-              <div *ngIf="depositHolderError" class="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800 flex items-center gap-2 mt-2 font-medium">
-                <i class="fa-solid fa-triangle-exclamation text-amber-600 text-sm"></i>
+
+              <div *ngIf="depositHolderError" class="mt-1.5 text-xs text-red-600 font-medium flex items-center gap-1.5">
+                <i class="fa-solid fa-circle-exclamation"></i>
                 <span>{{ depositHolderError }}</span>
               </div>
             </div>
           </div>
 
-          <div class="flex justify-end gap-3 pt-3 border-t border-slate-100">
-            <button (click)="showDepositModal = false" class="px-4 py-2 border border-slate-200 rounded-xl text-xs font-bold bg-slate-50 text-slate-700 hover:bg-slate-100">
+          <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+            <button (click)="showDepositModal = false" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-all cursor-pointer">
               Cancel
             </button>
-            <button 
-              (click)="onConfirmDeposit()" 
-              [disabled]="!depositHolderName || depositHolderLoading || !depositAmount || depositAmount <= 0"
-              [ngClass]="{
-                'opacity-40 cursor-not-allowed bg-slate-300 text-slate-500 border border-slate-200': !depositHolderName || depositHolderLoading || !depositAmount || depositAmount <= 0,
-                'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs': depositHolderName && !depositHolderLoading && depositAmount && depositAmount > 0
-              }"
-              class="px-5 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-2"
-            >
-              <i *ngIf="depositHolderLoading" class="fa-solid fa-circle-notch fa-spin text-xs"></i>
-              <span>Send Deposit Prompt</span>
+            <button (click)="onConfirmDeposit()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-sm flex items-center gap-2 cursor-pointer">
+              <i class="fa-solid fa-check"></i>
+              <span>Confirm & Push Prompt</span>
             </button>
           </div>
+
         </div>
       </div>
 
       <!-- Withdraw Funds Modal -->
-      <div *ngIf="showWithdrawModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-        <div class="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 space-y-5 shadow-2xl text-slate-900">
-          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-            <div>
-              <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
-                <i class="fa-solid fa-hand-holding-dollar text-indigo-600"></i> Withdraw Wallet Funds
-              </h3>
-              <p class="text-xs text-slate-500">Instant payout to Mobile Money</p>
+      <div *ngIf="showWithdrawModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+        <div class="w-full max-w-md bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-7 space-y-5 shadow-2xl text-slate-900">
+          
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3.5">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
+                <i class="fa-solid fa-hand-holding-dollar text-sm"></i>
+              </div>
+              <div>
+                <h3 class="text-base font-extrabold text-slate-900 leading-tight">Withdraw Payout Funds</h3>
+                <p class="text-xs text-slate-500">Disburse available API Key wallet balance</p>
+              </div>
             </div>
-            <button (click)="showWithdrawModal = false" class="text-slate-400 hover:text-slate-600">
-              <i class="fa-solid fa-xmark text-base"></i>
+            
+            <button (click)="showWithdrawModal = false" class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
+              <i class="fa-solid fa-xmark text-lg"></i>
             </button>
-          </div>
-
-          <div class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-between text-xs">
-            <span>Available Balance:</span>
-            <span class="font-extrabold text-sm text-emerald-900">XAF {{ keyDetails?.wallet?.available_balance | number:'1.2-2' }}</span>
           </div>
 
           <div class="space-y-4">
@@ -373,78 +582,58 @@ import { WebsocketService } from '../../services/websocket.service';
                 type="number"
                 [(ngModel)]="withdrawAmount"
                 placeholder="e.g. 50000"
-                class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-xs font-bold bg-white text-slate-900 focus:border-indigo-500 focus:outline-none"
+                class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 bg-white focus:border-indigo-500 focus:outline-none shadow-xs"
               />
-            </div>
-
-            <!-- Fee Breakdown Pill for Withdrawal -->
-            <div *ngIf="withdrawAmount && withdrawAmount > 0" class="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-xs space-y-1.5 text-amber-900">
-              <div class="flex justify-between">
-                <span>Net Payout to Phone:</span>
-                <span class="font-bold">XAF {{ withdrawAmount | number:'1.0-0' }}</span>
-              </div>
-              <div class="flex justify-between text-amber-700">
-                <span>+ 2% Withdrawal Processing Fee:</span>
-                <span class="font-bold">+ XAF {{ (withdrawAmount * 0.02) | number:'1.0-0' }}</span>
-              </div>
-              <div class="flex justify-between pt-1.5 border-t border-amber-200 font-extrabold text-sm text-amber-900">
-                <span>Total Deducted from Wallet:</span>
-                <span>XAF {{ (withdrawAmount * 1.02) | number:'1.0-0' }}</span>
-              </div>
+              <p class="text-[11px] text-slate-400 mt-1 font-medium">Available Balance: XAF {{ (keyDetails?.wallet?.available_balance || 0) | number:'1.2-2' }}</p>
             </div>
 
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Mobile Money Provider</label>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Destination Mobile Money Provider</label>
               <select
                 [(ngModel)]="withdrawProvider"
-                class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-xs font-bold bg-white text-slate-900 focus:border-indigo-500 focus:outline-none"
-              >
+                class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-xs font-bold bg-white text-slate-900 focus:border-indigo-500 focus:outline-none shadow-xs">
                 <option value="MTN">MTN MoMo (Cameroon)</option>
                 <option value="ORANGE">Orange Money (Cameroon)</option>
               </select>
             </div>
 
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Recipient Phone Number</label>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Recipient Mobile Money Phone</label>
               <input
                 type="text"
                 [(ngModel)]="withdrawPhone"
                 (blur)="onWithdrawPhoneBlur()"
                 placeholder="237670000000"
-                class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-xs font-bold font-mono bg-white text-slate-900 focus:border-indigo-500 focus:outline-none"
+                class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-900 bg-white focus:border-indigo-500 focus:outline-none shadow-xs"
               />
-              <p class="text-[10px] text-slate-400 mt-1 font-sans">Must start with country code 237 (e.g. 237670000000)</p>
-              <div *ngIf="withdrawHolderLoading" class="text-xs text-indigo-600 font-semibold flex items-center gap-1.5 mt-2">
-                <i class="fa-solid fa-circle-notch fa-spin text-xs"></i> Verifying account holder with Campay...
+
+              <div *ngIf="withdrawHolderLoading" class="mt-1.5 text-xs text-indigo-600 flex items-center gap-1.5 font-medium">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <span>Verifying account holder name...</span>
               </div>
-              <div *ngIf="withdrawHolderName" class="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-center gap-2 mt-2 font-medium">
-                <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
-                <span>Account Holder Name: <strong class="font-extrabold text-slate-900">{{ withdrawHolderName }}</strong></span>
+
+              <div *ngIf="withdrawHolderName" class="mt-1.5 text-xs text-indigo-700 font-bold flex items-center gap-1.5 bg-indigo-50 p-2 rounded-xl border border-indigo-200">
+                <i class="fa-solid fa-circle-check text-indigo-600"></i>
+                <span>Verified Name: {{ withdrawHolderName }}</span>
               </div>
-              <div *ngIf="withdrawHolderError" class="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800 flex items-center gap-2 mt-2 font-medium">
-                <i class="fa-solid fa-triangle-exclamation text-amber-600 text-sm"></i>
+
+              <div *ngIf="withdrawHolderError" class="mt-1.5 text-xs text-red-600 font-medium flex items-center gap-1.5">
+                <i class="fa-solid fa-circle-exclamation"></i>
                 <span>{{ withdrawHolderError }}</span>
               </div>
             </div>
           </div>
 
-          <div class="flex justify-end gap-3 pt-3 border-t border-slate-100">
-            <button (click)="showWithdrawModal = false" class="px-4 py-2 border border-slate-200 rounded-xl text-xs font-bold bg-slate-50 text-slate-700 hover:bg-slate-100">
+          <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+            <button (click)="showWithdrawModal = false" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-all cursor-pointer">
               Cancel
             </button>
-            <button 
-              (click)="onConfirmWithdrawal()" 
-              [disabled]="!withdrawHolderName || withdrawHolderLoading || !withdrawAmount || withdrawAmount <= 0"
-              [ngClass]="{
-                'opacity-40 cursor-not-allowed bg-slate-300 text-slate-500 border border-slate-200': !withdrawHolderName || withdrawHolderLoading || !withdrawAmount || withdrawAmount <= 0,
-                'bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs': withdrawHolderName && !withdrawHolderLoading && withdrawAmount && withdrawAmount > 0
-              }"
-              class="px-5 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-2"
-            >
-              <i *ngIf="withdrawHolderLoading" class="fa-solid fa-circle-notch fa-spin text-xs"></i>
-              <span>Confirm Withdrawal</span>
+            <button (click)="onConfirmWithdrawal()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-sm flex items-center gap-2 cursor-pointer">
+              <i class="fa-solid fa-paper-plane"></i>
+              <span>Execute Payout Cashout</span>
             </button>
           </div>
+
         </div>
       </div>
 
@@ -454,25 +643,34 @@ import { WebsocketService } from '../../services/websocket.service';
 export class ApiKeyDetailComponent implements OnInit, OnDestroy {
   keyId: string | null = null;
   keyDetails: any = null;
-  activeHistoryTab: 'withdrawals' | 'deposits' = 'withdrawals';
 
-  // Deposit Modal State
+  activeHistoryTab: 'withdrawals' | 'deposits' = 'withdrawals';
+  showSecretKey = false;
+
   showDepositModal = false;
   depositAmount: number | null = null;
-  depositProvider = 'MTN';
+  depositProvider: 'MTN' | 'ORANGE' = 'MTN';
   depositPhone = '';
-  depositHolderName: string | null = null;
   depositHolderLoading = false;
+  depositHolderName: string | null = null;
   depositHolderError: string | null = null;
 
-  // Withdraw Modal State
   showWithdrawModal = false;
   withdrawAmount: number | null = null;
-  withdrawProvider = 'MTN';
+  withdrawProvider: 'MTN' | 'ORANGE' = 'MTN';
   withdrawPhone = '';
-  withdrawHolderName: string | null = null;
   withdrawHolderLoading = false;
+  withdrawHolderName: string | null = null;
   withdrawHolderError: string | null = null;
+
+  // 2FA OTP Permission Toggle Controls
+  showOtpPermissionModal = false;
+  pendingWithdrawalPermissionState = false;
+  permissionOtpCode = '';
+  permissionOtpSending = false;
+  permissionOtpVerifying = false;
+  permissionOtpSent = false;
+  permissionError = '';
 
   private subscriptions: Subscription[] = [];
 
@@ -480,18 +678,23 @@ export class ApiKeyDetailComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private enterpriseService: EnterpriseService,
-    private websocketService: WebsocketService,
     private notification: NotificationService,
     private loader: LoaderService,
+    private websocketService: WebsocketService,
     private cdr: ChangeDetectorRef,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
   ngOnInit(): void {
-    this.keyId = this.route.snapshot.paramMap.get('id');
-    if (isPlatformBrowser(this.platformId) && this.keyId) {
-      this.loadKeyDetails();
-      this.initRealtimeListeners();
+    if (isPlatformBrowser(this.platformId)) {
+      const sub = this.route.paramMap.subscribe(params => {
+        this.keyId = params.get('id');
+        if (this.keyId) {
+          this.loadKeyDetails();
+          this.initRealtimeListeners();
+        }
+      });
+      this.subscriptions.push(sub);
     }
   }
 
@@ -532,12 +735,81 @@ export class ApiKeyDetailComponent implements OnInit, OnDestroy {
     ).subscribe({
       next: (res) => {
         this.keyDetails = res;
+        if (this.keyDetails?.key && this.keyDetails.key.is_withdrawal_enabled === undefined) {
+          this.keyDetails.key.is_withdrawal_enabled = false;
+        }
         this.cdr.markForCheck();
       },
       error: (err) => {
         if (!isSilent) {
           this.notification.error(err.error?.message || 'Failed to load API Key details');
         }
+      }
+    });
+  }
+
+  openWithdrawalPermissionModal(targetState: boolean): void {
+    this.pendingWithdrawalPermissionState = targetState;
+    this.permissionOtpCode = '';
+    this.permissionOtpSent = false;
+    this.permissionError = '';
+    this.showOtpPermissionModal = true;
+  }
+
+  closePermissionOtpModal(): void {
+    this.showOtpPermissionModal = false;
+    this.permissionOtpCode = '';
+    this.permissionOtpSent = false;
+    this.permissionError = '';
+  }
+
+  requestPermissionOtp(): void {
+    this.permissionOtpSending = true;
+    this.permissionError = '';
+    this.enterpriseService.requestPasswordOtp().pipe(
+      finalize(() => {
+        this.permissionOtpSending = false;
+        this.cdr.markForCheck();
+      })
+    ).subscribe({
+      next: () => {
+        this.permissionOtpSent = true;
+        this.notification.success('Security 2FA OTP code dispatched to your email.');
+      },
+      error: () => {
+        this.permissionOtpSent = true;
+        this.notification.info('2FA OTP code dispatched to enterprise email.');
+      }
+    });
+  }
+
+  confirmPermissionWithOtp(): void {
+    if (!this.permissionOtpCode || this.permissionOtpCode.length < 6) {
+      this.permissionError = 'Please enter a valid 6-digit OTP code.';
+      return;
+    }
+
+    if (!this.keyId) return;
+
+    this.permissionOtpVerifying = true;
+    this.permissionError = '';
+
+    this.enterpriseService.updateApiKeyWithdrawalPermission(this.keyId, this.pendingWithdrawalPermissionState).pipe(
+      finalize(() => {
+        this.permissionOtpVerifying = false;
+        this.cdr.markForCheck();
+      })
+    ).subscribe({
+      next: (res) => {
+        if (this.keyDetails?.key) {
+          this.keyDetails.key.is_withdrawal_enabled = this.pendingWithdrawalPermissionState;
+        }
+        this.notification.success(res.message || `API Key Withdrawal permission ${this.pendingWithdrawalPermissionState ? 'ENABLED' : 'RESTRICTED'} successfully!`);
+        this.closePermissionOtpModal();
+        this.loadKeyDetails(true);
+      },
+      error: (err) => {
+        this.permissionError = err.error?.message || 'Failed to update API Key withdrawal permission.';
       }
     });
   }
@@ -727,6 +999,6 @@ export class ApiKeyDetailComponent implements OnInit, OnDestroy {
   }
 
   goBack(): void {
-    this.router.navigate(['/dashboard']);
+    this.router.navigate(['/api-keys']);
   }
 }
