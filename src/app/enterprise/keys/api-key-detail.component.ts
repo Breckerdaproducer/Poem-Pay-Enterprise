@@ -331,7 +331,7 @@ import { WebsocketService } from '../../services/websocket.service';
                       <button (click)="copyPaymentLinkUrl(link.code)" class="px-2.5 py-1 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg text-[11px] font-bold cursor-pointer transition-all border border-indigo-200 flex items-center gap-1">
                         <i class="fa-regular fa-copy"></i> Copy Link
                       </button>
-                      <a [href]="'https://checkout.poempay.com/checkout/' + link.code" target="_blank" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-bold transition-all border border-slate-200 flex items-center gap-1">
+                      <a [href]="'https://poempay.com/checkout/' + link.code" target="_blank" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-bold transition-all border border-slate-200 flex items-center gap-1">
                         <i class="fa-solid fa-arrow-up-right-from-square"></i> Open
                       </a>
                     </div>
@@ -1141,7 +1141,7 @@ export class ApiKeyDetailComponent implements OnInit, OnDestroy {
   }
 
   copyPaymentLinkUrl(code: string): void {
-    const fullUrl = `https://checkout.poempay.com/checkout/${code}`;
+    const fullUrl = `https://poempay.com/checkout/${code}`;
     navigator.clipboard.writeText(fullUrl);
     this.notification.success('Payment link copied to clipboard!');
   }
