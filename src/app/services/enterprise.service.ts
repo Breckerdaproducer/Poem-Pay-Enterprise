@@ -414,6 +414,19 @@ export class EnterpriseService {
     );
   }
 
+  createPaymentLink(id: string, data: { title: string; description?: string; amount?: number; is_fixed_amount?: boolean; redirect_url?: string; expires_in_days?: number }): Observable<any> {
+    const payload = { ...data, key_id: id };
+    return this.http.post<any>(`${this.baseUrl}/v1/enterprise/portal/api-keys/${id}/payment-links`, payload, {
+      withCredentials: true,
+    });
+  }
+
+  getPaymentLinks(id: string): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/v1/enterprise/portal/api-keys/${id}/payment-links`, {
+      withCredentials: true,
+    });
+  }
+
   updateWebhook(webhook_url: string): Observable<Enterprise> {
     return this.http.patch<Enterprise>(
       `${this.baseUrl}/v1/enterprise/portal/webhook`,

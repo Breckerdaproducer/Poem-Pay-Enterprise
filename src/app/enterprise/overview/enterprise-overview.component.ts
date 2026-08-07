@@ -456,7 +456,8 @@ export class EnterpriseOverviewComponent implements OnInit, AfterViewInit, OnDes
   loadRecentTransactions(): void {
     if (!isPlatformBrowser(this.platformId)) return;
     this.enterpriseService.getPortalTransactions().subscribe(txs => {
-      this.recentTransactions = (txs || []).slice(0, 5);
+      const list = Array.isArray(txs) ? txs : (txs?.data || []);
+      this.recentTransactions = list.slice(0, 5);
       this.cdr.detectChanges();
     });
   }

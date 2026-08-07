@@ -889,49 +889,528 @@ export class EnterpriseDocsComponent implements OnInit {
 
   getCodeSnippet(): string {
     const fullUrl = this.getEndpointUrl();
+    const key = this.sandboxApiKey || 'sk_ent_live_YOUR_SECRET_KEY';
+    const phone = this.sandboxPhone || '237670000000';
+    const amount = this.sandboxAmount || 5000;
+    const ref = this.sandboxRef || 'INV-2026-00129';
+    const provider = this.sandboxProvider || 'MTN';
+    const accountName = this.sandboxAccountName || 'Marie Nguele';
+    const lang = (this.selectedLang || 'curl').toLowerCase();
 
+    // 1. CHARGE ENDPOINT
     if (this.selectedEndpoint === 'charge') {
-      return `curl -X POST ${fullUrl} \\
+      if (lang === 'javascript') {
+        return `const response = await fetch("${fullUrl}", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "x-api-key": "${key}"
+  },
+  body: JSON.stringify({
+    phone_number: "${phone}",
+    amount: ${amount},
+    enterprise_reference: "${ref}",
+    description: "Payment for Order #${ref}",
+    currency: "XAF"
+  })
+});
+const data = await response.json();
+console.log(data);`;
+      } else if (lang === 'node') {
+        return `const axios = require('axios');
+
+async function chargeCustomer() {
+  try {
+    const response = await axios.post('${fullUrl}', {
+      phone_number: '${phone}',
+      amount: ${amount},
+      enterprise_reference: '${ref}',
+      description: 'Payment for Order #${ref}',
+      currency: 'XAF'
+    }, {
+      headers: {
+        'x-api-key': '${key}',
+        'Content-Type': 'application/json'
+      }
+    });
+    console.log('Charge Initiated:', response.data);
+  } catch (error) {
+    console.error('Charge Error:', error.response ? error.response.data : error.message);
+  }
+}
+chargeCustomer();`;
+      } else if (lang === 'python') {
+        return `import requests
+
+url = "${fullUrl}"
+headers = {
+    "x-api-key": "${key}",
+    "Content-Type": "application/json"
+}
+payload = {
+    "phone_number": "${phone}",
+    "amount": ${amount},
+    "enterprise_reference": "${ref}",
+    "description": "Payment for Order #${ref}",
+    "currency": "XAF"
+}
+
+response = requests.post(url, json=payload, headers=headers)
+print("Status Code:", response.status_code)
+print("Response:", response.json())`;
+      } else if (lang === 'php') {
+        return `<?php
+$ch = curl_init("${fullUrl}");
+
+$payload = json_encode([
+    "phone_number" => "${phone}",
+    "amount" => ${amount},
+    "enterprise_reference" => "${ref}",
+    "description" => "Payment for Order #${ref}",
+    "currency" => "XAF"
+]);
+
+curl_setopt_array($ch, [
+    CURLOPT_POST => true,
+    CURLOPT_POSTFIELDS => $payload,
+    CURLOPT_HTTPHEADER => [
+        "x-api-key: ${key}",
+        "Content-Type: application/json"
+    ],
+    CURLOPT_RETURNTRANSFER => true
+]);
+
+$response = curl_exec($ch);
+curl_close($ch);
+echo $response;
+?>`;
+      } else if (lang === 'go') {
+        return `package main
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+)
+
+func main() {
+	url := "${fullUrl}"
+	payload := map[string]interface{}{
+		"phone_number":          "${phone}",
+		"amount":                ${amount},
+		"enterprise_reference": "${ref}",
+		"description":          "Payment for Order #${ref}",
+		"currency":             "XAF",
+	}
+	jsonPayload, _ := json.Marshal(payload)
+
+	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(jsonPayload))
+	req.Header.Set("x-api-key", "${key}")
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	fmt.Println(string(body))
+}`;
+      } else if (lang === 'java') {
+        return `import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+
+public class PoemPayCharge {
+    public static void main(String[] args) throws Exception {
+        String jsonPayload = """
+            {
+                "phone_number": "${phone}",
+                "amount": ${amount},
+                "enterprise_reference": "${ref}",
+                "description": "Payment for Order #${ref}",
+                "currency": "XAF"
+            }
+            """;
+
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("${fullUrl}"))
+                .header("x-api-key", "${key}")
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        System.out.println("Status: " + response.statusCode());
+        System.out.println("Body: " + response.body());
+    }
+}`;
+      } else {
+        return `curl -X POST ${fullUrl} \\
   -H "Content-Type: application/json" \\
-  -H "x-api-key: ${this.sandboxApiKey}" \\
+  -H "x-api-key: ${key}" \\
   -d '{
-    "phone_number": "${this.sandboxPhone}",
-    "amount": ${this.sandboxAmount},
-    "enterprise_reference": "${this.sandboxRef}",
-    "description": "Payment for Order #${this.sandboxRef}",
+    "phone_number": "${phone}",
+    "amount": ${amount},
+    "enterprise_reference": "${ref}",
+    "description": "Payment for Order #${ref}",
     "currency": "XAF"
   }'`;
-    } else if (this.selectedEndpoint === 'deposit') {
-      return `curl -X POST ${fullUrl} \\
+      }
+    }
+
+    // 2. DEPOSIT TOP-UP ENDPOINT
+    else if (this.selectedEndpoint === 'deposit') {
+      if (lang === 'javascript' || lang === 'node') {
+        return `const response = await fetch("${fullUrl}", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "x-api-key": "${key}"
+  },
+  body: JSON.stringify({
+    amount: ${amount},
+    provider: "${provider}",
+    phone_number: "${phone}"
+  })
+});
+const data = await response.json();
+console.log(data);`;
+      } else if (lang === 'python') {
+        return `import requests
+
+response = requests.post(
+    "${fullUrl}",
+    headers={"x-api-key": "${key}", "Content-Type": "application/json"},
+    json={"amount": ${amount}, "provider": "${provider}", "phone_number": "${phone}"}
+)
+print(response.json())`;
+      } else if (lang === 'php') {
+        return `<?php
+$ch = curl_init("${fullUrl}");
+curl_setopt_array($ch, [
+    CURLOPT_POST => true,
+    CURLOPT_POSTFIELDS => json_encode(["amount" => ${amount}, "provider" => "${provider}", "phone_number" => "${phone}"]),
+    CURLOPT_HTTPHEADER => ["x-api-key: ${key}", "Content-Type: application/json"],
+    CURLOPT_RETURNTRANSFER => true
+]);
+echo curl_exec($ch);
+?>`;
+      } else if (lang === 'go') {
+        return `package main
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"net/http"
+)
+
+func main() {
+	payload, _ := json.Marshal(map[string]interface{}{
+		"amount": ${amount}, "provider": "${provider}", "phone_number": "${phone}",
+	})
+	req, _ := http.NewRequest("POST", "${fullUrl}", bytes.NewBuffer(payload))
+	req.Header.Set("x-api-key", "${key}")
+	req.Header.Set("Content-Type", "application/json")
+	resp, _ := http.DefaultClient.Do(req)
+	fmt.Println(resp.Status)
+}`;
+      } else if (lang === 'java') {
+        return `import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+
+public class Deposit {
+    public static void main(String[] args) throws Exception {
+        String body = """
+            { "amount": ${amount}, "provider": "${provider}", "phone_number": "${phone}" }
+            """;
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("${fullUrl}"))
+                .header("x-api-key", "${key}")
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build();
+        System.out.println(HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString()).body());
+    }
+}`;
+      } else {
+        return `curl -X POST ${fullUrl} \\
   -H "Content-Type: application/json" \\
-  -H "x-api-key: ${this.sandboxApiKey}" \\
+  -H "x-api-key: ${key}" \\
   -d '{
-    "amount": ${this.sandboxAmount},
-    "provider": "${this.sandboxProvider}",
-    "phone_number": "${this.sandboxPhone}"
+    "amount": ${amount},
+    "provider": "${provider}",
+    "phone_number": "${phone}"
   }'`;
-    } else if (this.selectedEndpoint === 'status') {
-      return `curl -X GET ${fullUrl} \\
-  -H "x-api-key: ${this.sandboxApiKey}"`;
-    } else if (this.selectedEndpoint === 'withdraw') {
-      return `curl -X POST ${fullUrl} \\
+      }
+    }
+
+    // 3. TRANSACTION STATUS ENDPOINT
+    else if (this.selectedEndpoint === 'status') {
+      if (lang === 'javascript' || lang === 'node') {
+        return `const response = await fetch("${fullUrl}", {
+  headers: { "x-api-key": "${key}" }
+});
+const statusData = await response.json();
+console.log(statusData);`;
+      } else if (lang === 'python') {
+        return `import requests
+
+response = requests.get("${fullUrl}", headers={"x-api-key": "${key}"})
+print(response.json())`;
+      } else if (lang === 'php') {
+        return `<?php
+$ch = curl_init("${fullUrl}");
+curl_setopt($ch, CURLOPT_HTTPHEADER, ["x-api-key: ${key}"]);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+echo curl_exec($ch);
+?>`;
+      } else if (lang === 'go') {
+        return `package main
+
+import ("fmt"; "net/http"; "io")
+
+func main() {
+	req, _ := http.NewRequest("GET", "${fullUrl}", nil)
+	req.Header.Set("x-api-key", "${key}")
+	resp, _ := http.DefaultClient.Do(req)
+	body, _ := io.ReadAll(resp.Body)
+	fmt.Println(string(body))
+}`;
+      } else if (lang === 'java') {
+        return `import java.net.URI;
+import java.net.http.*;
+
+public class CheckStatus {
+    public static void main(String[] args) throws Exception {
+        HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create("${fullUrl}"))
+                .header("x-api-key", "${key}")
+                .GET().build();
+        System.out.println(HttpClient.newHttpClient().send(req, HttpResponse.BodyHandlers.ofString()).body());
+    }
+}`;
+      } else {
+        return `curl -X GET ${fullUrl} \\
+  -H "x-api-key: ${key}"`;
+      }
+    }
+
+    // 4. WITHDRAWAL PAYOUT ENDPOINT
+    else if (this.selectedEndpoint === 'withdraw') {
+      if (lang === 'javascript' || lang === 'node') {
+        return `const response = await fetch("${fullUrl}", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "x-api-key": "${key}"
+  },
+  body: JSON.stringify({
+    amount: ${amount},
+    provider: "${provider}",
+    phone_number: "${phone}",
+    account_name: "${accountName}"
+  })
+});
+const data = await response.json();
+console.log(data);`;
+      } else if (lang === 'python') {
+        return `import requests
+
+response = requests.post(
+    "${fullUrl}",
+    headers={"x-api-key": "${key}", "Content-Type": "application/json"},
+    json={"amount": ${amount}, "provider": "${provider}", "phone_number": "${phone}", "account_name": "${accountName}"}
+)
+print(response.json())`;
+      } else if (lang === 'php') {
+        return `<?php
+$ch = curl_init("${fullUrl}");
+curl_setopt_array($ch, [
+    CURLOPT_POST => true,
+    CURLOPT_POSTFIELDS => json_encode(["amount" => ${amount}, "provider" => "${provider}", "phone_number" => "${phone}", "account_name" => "${accountName}"]),
+    CURLOPT_HTTPHEADER => ["x-api-key: ${key}", "Content-Type: application/json"],
+    CURLOPT_RETURNTRANSFER => true
+]);
+echo curl_exec($ch);
+?>`;
+      } else if (lang === 'go') {
+        return `package main
+
+import ("bytes"; "encoding/json"; "fmt"; "net/http")
+
+func main() {
+	payload, _ := json.Marshal(map[string]interface{}{
+		"amount": ${amount}, "provider": "${provider}", "phone_number": "${phone}", "account_name": "${accountName}",
+	})
+	req, _ := http.NewRequest("POST", "${fullUrl}", bytes.NewBuffer(payload))
+	req.Header.Set("x-api-key", "${key}")
+	req.Header.Set("Content-Type", "application/json")
+	resp, _ := http.DefaultClient.Do(req)
+	fmt.Println(resp.Status)
+}`;
+      } else if (lang === 'java') {
+        return `import java.net.URI;
+import java.net.http.*;
+
+public class WithdrawPayout {
+    public static void main(String[] args) throws Exception {
+        String body = """
+            { "amount": ${amount}, "provider": "${provider}", "phone_number": "${phone}", "account_name": "${accountName}" }
+            """;
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("${fullUrl}"))
+                .header("x-api-key", "${key}")
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build();
+        System.out.println(HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString()).body());
+    }
+}`;
+      } else {
+        return `curl -X POST ${fullUrl} \\
   -H "Content-Type: application/json" \\
-  -H "x-api-key: ${this.sandboxApiKey}" \\
+  -H "x-api-key: ${key}" \\
   -d '{
-    "amount": ${this.sandboxAmount},
-    "provider": "${this.sandboxProvider}",
-    "phone_number": "${this.sandboxPhone}",
-    "account_name": "${this.sandboxAccountName}"
+    "amount": ${amount},
+    "provider": "${provider}",
+    "phone_number": "${phone}",
+    "account_name": "${accountName}"
   }'`;
-    } else if (this.selectedEndpoint === 'resolve') {
-      return `curl -X GET "${fullUrl}" \\
-  -H "x-api-key: ${this.sandboxApiKey}"`;
-    } else {
-      return `// ExpressJS Node.js Webhook Receiver Example
+      }
+    }
+
+    // 5. RESOLVE HOLDER ENDPOINT
+    else if (this.selectedEndpoint === 'resolve') {
+      if (lang === 'javascript' || lang === 'node') {
+        return `const response = await fetch("${fullUrl}", {
+  headers: { "x-api-key": "${key}" }
+});
+const holder = await response.json();
+console.log("Account Holder:", holder.account_name);`;
+      } else if (lang === 'python') {
+        return `import requests
+
+response = requests.get("${fullUrl}", headers={"x-api-key": "${key}"})
+print("Account Holder:", response.json().get("account_name"))`;
+      } else if (lang === 'php') {
+        return `<?php
+$ch = curl_init("${fullUrl}");
+curl_setopt($ch, CURLOPT_HTTPHEADER, ["x-api-key: ${key}"]);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+echo curl_exec($ch);
+?>`;
+      } else if (lang === 'go') {
+        return `package main
+
+import ("fmt"; "net/http"; "io")
+
+func main() {
+	req, _ := http.NewRequest("GET", "${fullUrl}", nil)
+	req.Header.Set("x-api-key", "${key}")
+	resp, _ := http.DefaultClient.Do(req)
+	body, _ := io.ReadAll(resp.Body)
+	fmt.Println(string(body))
+}`;
+      } else if (lang === 'java') {
+        return `import java.net.URI;
+import java.net.http.*;
+
+public class ResolveHolder {
+    public static void main(String[] args) throws Exception {
+        HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create("${fullUrl}"))
+                .header("x-api-key", "${key}")
+                .GET().build();
+        System.out.println(HttpClient.newHttpClient().send(req, HttpResponse.BodyHandlers.ofString()).body());
+    }
+}`;
+      } else {
+        return `curl -X GET "${fullUrl}" \\
+  -H "x-api-key: ${key}"`;
+      }
+    }
+
+    // 6. WEBHOOK RECEIVER ENDPOINT
+    else {
+      if (lang === 'python') {
+        return `# Flask Webhook Receiver Example
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+@app.route('/webhooks/poempay', methods=['POST'])
+def poempay_webhook():
+    event_data = request.json
+    print("Received PoemPay Webhook:", event_data)
+    return jsonify({"status": "SUCCESS"}), 200
+
+if __name__ == '__main__':
+    app.run(port=5000)`;
+      } else if (lang === 'php') {
+        return `<?php
+// PHP Webhook Listener
+$payload = file_get_contents('php://input');
+$event = json_decode($payload, true);
+
+if ($event && isset($event['event'])) {
+    http_response_code(200);
+    echo json_encode(["status" => "SUCCESS"]);
+} else {
+    http_response_code(400);
+}
+?>`;
+      } else if (lang === 'go') {
+        return `package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+)
+
+func webhookHandler(w http.ResponseWriter, r *http.Request) {
+	var payload map[string]interface{}
+	json.NewDecoder(r.Body).Decode(&payload)
+	fmt.Println("PoemPay Webhook Received:", payload)
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(\`{"status":"SUCCESS"}\`))
+}
+
+func main() {
+	http.HandleFunc("/webhooks/poempay", webhookHandler)
+	http.ListenAndServe(":8080", nil)
+}`;
+      } else if (lang === 'java') {
+        return `// Spring Boot Webhook Controller Example
+@RestController
+@RequestMapping("/webhooks")
+public class PoemPayWebhookController {
+
+    @PostMapping("/poempay")
+    public ResponseEntity<Map<String, String>> handleWebhook(@RequestBody Map<String, Object> payload) {
+        System.out.println("PoemPay Event Received: " + payload.get("event"));
+        return ResponseEntity.ok(Map.of("status", "SUCCESS"));
+    }
+}`;
+      } else {
+        return `// ExpressJS Node.js Webhook Receiver Example
 app.post('/webhooks/poempay', (req, res) => {
   const { event, data } = req.body;
+  console.log('PoemPay Event Received:', event, data);
   res.status(200).send({ status: 'SUCCESS' });
 });`;
+      }
     }
   }
 
