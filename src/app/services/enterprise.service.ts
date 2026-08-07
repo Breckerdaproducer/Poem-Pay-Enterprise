@@ -414,6 +414,16 @@ export class EnterpriseService {
     );
   }
 
+  updateApiKeySecurity(id: string, data: { allowed_ip_addresses?: string[]; is_ip_whitelist_enabled?: boolean; max_rpm_limit?: number; max_hourly_volume_limit?: number }): Observable<any> {
+    return this.http.patch<any>(`${this.baseUrl}/v1/enterprise/portal/api-keys/${id}/security`, data, {
+      withCredentials: true,
+    }).pipe(
+      tap(() => {
+        this.getApiKeys().subscribe();
+      })
+    );
+  }
+
   createPaymentLink(id: string, data: { title: string; description?: string; amount?: number; is_fixed_amount?: boolean; redirect_url?: string; expires_in_days?: number }): Observable<any> {
     const payload = { ...data, key_id: id };
     return this.http.post<any>(`${this.baseUrl}/v1/enterprise/portal/api-keys/${id}/payment-links`, payload, {

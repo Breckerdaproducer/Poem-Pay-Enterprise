@@ -271,6 +271,75 @@ import { WebsocketService } from '../../services/websocket.service';
 
         </div>
 
+        <!-- 3.5 Security & Fraud Prevention Settings Card -->
+        <div class="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-xs space-y-5">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/80 pb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl bg-slate-900 text-emerald-400 flex items-center justify-center text-sm shrink-0 font-bold shadow-xs">
+                <i class="fa-solid fa-shield-halved"></i>
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <h3 class="text-sm font-extrabold text-slate-900 tracking-tight">Security & Fraud Prevention Controls</h3>
+                  <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    Active Protection
+                  </span>
+                </div>
+                <p class="text-[11px] text-slate-400 font-medium">IP whitelisting, velocity rate limits, and real-time anomaly alerts</p>
+              </div>
+            </div>
+
+            <button (click)="openSecurityModal()" class="px-4 py-2 bg-[#0000ad] hover:bg-[#00008e] text-white rounded-xl text-xs font-extrabold flex items-center gap-2 cursor-pointer transition-all shadow-xs">
+              <i class="fa-solid fa-sliders"></i> Configure Security Rules
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            
+            <!-- IP Whitelist Card -->
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+              <div class="flex items-center justify-between text-xs font-bold text-slate-700">
+                <span class="flex items-center gap-1.5">
+                  <i class="fa-solid fa-network-wired text-indigo-600"></i> IP Whitelist:
+                </span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase" [ngClass]="keyDetails?.is_ip_whitelist_enabled ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'">
+                  {{ keyDetails?.is_ip_whitelist_enabled ? 'ENABLED' : 'DISABLED' }}
+                </span>
+              </div>
+              <p class="text-[11px] font-mono text-slate-600 truncate">
+                {{ (keyDetails?.allowed_ip_addresses && keyDetails?.allowed_ip_addresses?.length > 0) ? keyDetails?.allowed_ip_addresses?.join(', ') : 'Any IP allowed (Not Restricted)' }}
+              </p>
+            </div>
+
+            <!-- Velocity Limit Card -->
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+              <div class="flex items-center justify-between text-xs font-bold text-slate-700">
+                <span class="flex items-center gap-1.5">
+                  <i class="fa-solid fa-gauge-high text-blue-600"></i> Max Velocity RPM:
+                </span>
+                <span class="font-mono text-xs font-extrabold text-slate-900">
+                  {{ keyDetails?.max_rpm_limit || 60 }} req/min
+                </span>
+              </div>
+              <p class="text-[11px] text-slate-500">Rate limit window prevents API spam & DDoS</p>
+            </div>
+
+            <!-- Hourly Volume Cap -->
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+              <div class="flex items-center justify-between text-xs font-bold text-slate-700">
+                <span class="flex items-center gap-1.5">
+                  <i class="fa-solid fa-vault text-purple-600"></i> Hourly Volume Cap:
+                </span>
+                <span class="font-mono text-xs font-extrabold text-slate-900">
+                  XAF {{ (keyDetails?.max_hourly_volume_limit || 5000000) | number:'1.0-0' }}
+                </span>
+              </div>
+              <p class="text-[11px] text-slate-500">Anomaly trigger cap on hourly collection volume</p>
+            </div>
+
+          </div>
+        </div>
+
         <!-- 4. Active Payment Links Section -->
         <div class="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-xs space-y-5">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/80 pb-4">
@@ -600,12 +669,29 @@ import { WebsocketService } from '../../services/websocket.service';
 
             <div>
               <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Mobile Money Provider</label>
-              <select
-                [(ngModel)]="depositProvider"
-                class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-xs font-bold bg-white text-slate-900 focus:border-indigo-500 focus:outline-none shadow-xs">
-                <option value="MTN">MTN MoMo (Cameroon)</option>
-                <option value="ORANGE">Orange Money (Cameroon)</option>
-              </select>
+              <div class="grid grid-cols-2 gap-3">
+                <div 
+                  (click)="depositProvider = 'MTN'"
+                  class="p-3 rounded-2xl border flex items-center gap-3 cursor-pointer transition-all"
+                  [ngClass]="depositProvider === 'MTN' ? 'border-amber-500 bg-amber-50/60 ring-2 ring-amber-500/20' : 'border-slate-200 bg-white hover:border-slate-300'">
+                  <img src="/mtn.png" alt="MTN" class="w-8 h-8 rounded-lg object-cover border border-amber-300 shrink-0" />
+                  <div>
+                    <span class="font-extrabold text-xs text-slate-900 block">MTN MoMo</span>
+                    <span class="text-[10px] text-slate-500 font-medium">Cameroon</span>
+                  </div>
+                </div>
+
+                <div 
+                  (click)="depositProvider = 'ORANGE'"
+                  class="p-3 rounded-2xl border flex items-center gap-3 cursor-pointer transition-all"
+                  [ngClass]="depositProvider === 'ORANGE' ? 'border-orange-500 bg-orange-50/60 ring-2 ring-orange-500/20' : 'border-slate-200 bg-white hover:border-slate-300'">
+                  <img src="/orange.png" alt="Orange" class="w-8 h-8 rounded-lg object-cover border border-orange-400 shrink-0" />
+                  <div>
+                    <span class="font-extrabold text-xs text-slate-900 block">Orange Money</span>
+                    <span class="text-[10px] text-slate-500 font-medium">Cameroon</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div>
@@ -761,12 +847,29 @@ import { WebsocketService } from '../../services/websocket.service';
 
             <div>
               <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Recipient Provider</label>
-              <select
-                [(ngModel)]="withdrawProvider"
-                class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-xs font-bold bg-white text-slate-900 focus:border-indigo-500 focus:outline-none shadow-xs">
-                <option value="MTN">MTN MoMo (Cameroon)</option>
-                <option value="ORANGE">Orange Money (Cameroon)</option>
-              </select>
+              <div class="grid grid-cols-2 gap-3">
+                <div 
+                  (click)="withdrawProvider = 'MTN'"
+                  class="p-3 rounded-2xl border flex items-center gap-3 cursor-pointer transition-all"
+                  [ngClass]="withdrawProvider === 'MTN' ? 'border-amber-500 bg-amber-50/60 ring-2 ring-amber-500/20' : 'border-slate-200 bg-white hover:border-slate-300'">
+                  <img src="/mtn.png" alt="MTN" class="w-8 h-8 rounded-lg object-cover border border-amber-300 shrink-0" />
+                  <div>
+                    <span class="font-extrabold text-xs text-slate-900 block">MTN MoMo</span>
+                    <span class="text-[10px] text-slate-500 font-medium">Cameroon</span>
+                  </div>
+                </div>
+
+                <div 
+                  (click)="withdrawProvider = 'ORANGE'"
+                  class="p-3 rounded-2xl border flex items-center gap-3 cursor-pointer transition-all"
+                  [ngClass]="withdrawProvider === 'ORANGE' ? 'border-orange-500 bg-orange-50/60 ring-2 ring-orange-500/20' : 'border-slate-200 bg-white hover:border-slate-300'">
+                  <img src="/orange.png" alt="Orange" class="w-8 h-8 rounded-lg object-cover border border-orange-400 shrink-0" />
+                  <div>
+                    <span class="font-extrabold text-xs text-slate-900 block">Orange Money</span>
+                    <span class="text-[10px] text-slate-500 font-medium">Cameroon</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div>
@@ -961,6 +1064,87 @@ import { WebsocketService } from '../../services/websocket.service';
         </div>
       </div>
 
+      <!-- Configure Security & Fraud Prevention Rules Modal -->
+      <div *ngIf="showSecurityModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+        <div class="w-full max-w-md bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-7 space-y-5 shadow-2xl text-slate-900">
+          
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3.5">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-slate-900 text-emerald-400 flex items-center justify-center font-bold">
+                <i class="fa-solid fa-shield-halved text-sm"></i>
+              </div>
+              <div>
+                <h3 class="text-base font-extrabold text-slate-900 leading-tight">Security & Fraud Controls</h3>
+                <p class="text-xs text-slate-500">Configure IP whitelist and velocity rate limits</p>
+              </div>
+            </div>
+            
+            <button (click)="showSecurityModal = false" class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
+              <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+          </div>
+
+          <div class="space-y-4 text-xs">
+            <!-- IP Whitelist Switch -->
+            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+              <div>
+                <span class="font-extrabold text-slate-900 block">Enforce IP Whitelisting</span>
+                <span class="text-[11px] text-slate-500 font-medium">Reject requests originating from unlisted IP addresses</span>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" [(ngModel)]="isIpWhitelistEnabled" class="sr-only peer">
+                <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+              </label>
+            </div>
+
+            <!-- Allowed IPs Input -->
+            <div *ngIf="isIpWhitelistEnabled">
+              <label class="block font-bold uppercase tracking-wider text-slate-600 mb-1.5">Allowed Server IP Addresses (Comma-separated)</label>
+              <textarea
+                [(ngModel)]="allowedIpAddressesInput"
+                rows="2"
+                placeholder="192.168.1.1, 10.0.0.50, 45.33.18.9"
+                class="w-full px-4 py-2.5 border border-slate-300 rounded-xl font-mono text-xs font-bold text-slate-900 bg-white focus:border-indigo-500 focus:outline-none shadow-xs"
+              ></textarea>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block font-bold uppercase tracking-wider text-slate-600 mb-1.5">Max Velocity (RPM)</label>
+                <input
+                  type="number"
+                  [(ngModel)]="maxRpmLimit"
+                  placeholder="60"
+                  class="w-full px-4 py-2.5 border border-slate-300 rounded-xl font-bold text-slate-900 bg-white focus:border-indigo-500 focus:outline-none shadow-xs"
+                />
+              </div>
+
+              <div>
+                <label class="block font-bold uppercase tracking-wider text-slate-600 mb-1.5">Hourly Cap (XAF)</label>
+                <input
+                  type="number"
+                  [(ngModel)]="maxHourlyVolumeLimit"
+                  placeholder="5000000"
+                  class="w-full px-4 py-2.5 border border-slate-300 rounded-xl font-bold text-slate-900 bg-white focus:border-indigo-500 focus:outline-none shadow-xs"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+            <button (click)="showSecurityModal = false" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-all cursor-pointer">
+              Cancel
+            </button>
+            <button (click)="saveSecuritySettings()" [disabled]="securitySaving" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-sm flex items-center gap-2 cursor-pointer disabled:opacity-50">
+              <i *ngIf="!securitySaving" class="fa-solid fa-shield-check"></i>
+              <i *ngIf="securitySaving" class="fa-solid fa-circle-notch fa-spin"></i>
+              <span>{{ securitySaving ? 'Saving Rules...' : 'Save Security Rules' }}</span>
+            </button>
+          </div>
+
+        </div>
+      </div>
+
     </div>
   `
 })
@@ -976,6 +1160,14 @@ export class ApiKeyDetailComponent implements OnInit, OnDestroy {
   newLinkAmount: number | null = null;
   newLinkExpiryDays = 0;
   newLinkRedirectUrl = '';
+
+  // IP Whitelisting & Security State
+  showSecurityModal = false;
+  isIpWhitelistEnabled = false;
+  allowedIpAddressesInput = '';
+  maxRpmLimit = 60;
+  maxHourlyVolumeLimit = 5000000;
+  securitySaving = false;
 
   // Deposit Top-up Modal State
   showDepositModal = false;
@@ -1515,5 +1707,47 @@ export class ApiKeyDetailComponent implements OnInit, OnDestroy {
     if (!text || !isPlatformBrowser(this.platformId)) return;
     navigator.clipboard.writeText(text);
     this.notification.success('Copied to clipboard!');
+  }
+
+  openSecurityModal(): void {
+    if (this.keyDetails) {
+      this.isIpWhitelistEnabled = !!this.keyDetails.is_ip_whitelist_enabled;
+      this.allowedIpAddressesInput = Array.isArray(this.keyDetails.allowed_ip_addresses)
+        ? this.keyDetails.allowed_ip_addresses.join(', ')
+        : '';
+      this.maxRpmLimit = this.keyDetails.max_rpm_limit || 60;
+      this.maxHourlyVolumeLimit = Number(this.keyDetails.max_hourly_volume_limit || 5000000);
+    }
+    this.showSecurityModal = true;
+  }
+
+  saveSecuritySettings(): void {
+    if (!this.keyId) return;
+    this.securitySaving = true;
+
+    const ips = this.allowedIpAddressesInput
+      .split(',')
+      .map(i => i.trim())
+      .filter(i => i.length > 0);
+
+    this.enterpriseService.updateApiKeySecurity(this.keyId, {
+      is_ip_whitelist_enabled: this.isIpWhitelistEnabled,
+      allowed_ip_addresses: ips,
+      max_rpm_limit: this.maxRpmLimit,
+      max_hourly_volume_limit: this.maxHourlyVolumeLimit,
+    }).subscribe({
+      next: (res) => {
+        this.securitySaving = false;
+        this.showSecurityModal = false;
+        this.notification.success(res.message || 'Security & Fraud Prevention rules updated!');
+        this.loadKeyDetails(true);
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.securitySaving = false;
+        this.notification.error(err.error?.message || 'Failed to update security rules.');
+        this.cdr.markForCheck();
+      }
+    });
   }
 }
