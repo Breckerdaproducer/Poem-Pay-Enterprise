@@ -221,9 +221,12 @@ export class EnterpriseLoginComponent implements OnInit {
       })
     ).subscribe({
       next: (res) => {
-        if (res.otp_pending && res.temp_token) {
-          this.notification.info('2FA OTP code sent to your email. Please verify.');
-          this.router.navigate(['/otp'], { state: { token: res.temp_token, temp_token: res.temp_token } });
+        if (res.mfa_pending && res.temp_token) {
+          this.notification.info('Google Authenticator 2FA code required. Please verify.');
+          this.router.navigate(['/otp'], { state: { token: res.temp_token, temp_token: res.temp_token, mfa_pending: true, email: res.email } });
+        } else if (res.otp_pending && res.temp_token) {
+          this.notification.info('Security OTP code sent to your email. Please verify.');
+          this.router.navigate(['/otp'], { state: { token: res.temp_token, temp_token: res.temp_token, otp_pending: true, email: res.email } });
         } else {
           const user = res?.user || res;
           const role = (user?.role || '').toLowerCase();

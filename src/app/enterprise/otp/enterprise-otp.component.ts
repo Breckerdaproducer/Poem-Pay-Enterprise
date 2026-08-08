@@ -30,31 +30,42 @@ import { LoaderService } from '../../services/loader.service';
             </div>
             <span class="text-xl font-bold text-white tracking-wider">POEM PAY</span>
             <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 uppercase tracking-widest">
-              Enterprise 2FA
+              {{ isMfaStep ? 'Google 2FA' : 'Email OTP' }}
             </span>
           </div>
         </div>
 
         <div class="relative z-10 max-w-lg">
-          <h1 class="text-4xl xl:text-5xl font-bold text-white leading-tight mb-6">
+          <h1 *ngIf="isMfaStep" class="text-4xl xl:text-5xl font-bold text-white leading-tight mb-6">
+            Google <br />
+            Authenticator <br />
+            2FA Verification.
+          </h1>
+
+          <h1 *ngIf="!isMfaStep" class="text-4xl xl:text-5xl font-bold text-white leading-tight mb-6">
             Two-Factor <br />
             Email OTP <br />
             Verification.
           </h1>
 
-          <p class="text-lg leading-relaxed mb-8" style="color: #4e6a94">
+          <p *ngIf="isMfaStep" class="text-lg leading-relaxed mb-8" style="color: #4e6a94">
+            Open your Google Authenticator or Authy application to retrieve your active 6-digit TOTP security code.
+          </p>
+
+          <p *ngIf="!isMfaStep" class="text-lg leading-relaxed mb-8" style="color: #4e6a94">
             We have dispatched a 6-digit security verification code to your registered enterprise email address.
           </p>
 
           <div class="border rounded-2xl p-6 backdrop-blur-sm" style="background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.06)">
             <div class="flex gap-4">
               <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center shrink-0">
-                <i class="fa-solid fa-envelope-circle-check text-indigo-400 text-xl"></i>
+                <i *ngIf="isMfaStep" class="fa-solid fa-mobile-screen-button text-indigo-400 text-xl"></i>
+                <i *ngIf="!isMfaStep" class="fa-solid fa-envelope-circle-check text-indigo-400 text-xl"></i>
               </div>
               <div>
-                <h4 class="text-white font-bold mb-1">Check Your Inbox</h4>
+                <h4 class="text-white font-bold mb-1">{{ isMfaStep ? 'Google Authenticator Code' : 'Check Your Inbox' }}</h4>
                 <p class="text-sm leading-relaxed" style="color: #4e6a94">
-                  The OTP is valid for 5 minutes. Please check your spam folder if you do not receive it in your inbox.
+                  {{ isMfaStep ? 'Codes refresh every 30 seconds inside your authenticator app.' : 'The OTP is valid for 5 minutes. Check your spam folder if missing.' }}
                 </p>
               </div>
             </div>
@@ -66,14 +77,21 @@ import { LoaderService } from '../../services/loader.service';
         </div>
       </div>
 
-      <!-- RIGHT PANEL (OTP Input Form) -->
+      <!-- RIGHT PANEL (OTP / 2FA Input Form) -->
       <div class="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-8 lg:p-12">
         <div class="w-full max-w-md">
           
           <div class="mb-8 text-center lg:text-left">
-            <h2 class="text-2xl sm:text-3xl font-bold mb-2" style="color: var(--text-primary)">Enterprise 2FA</h2>
+            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 text-xs font-extrabold uppercase tracking-wider mb-3">
+              <i class="fa-solid" [ngClass]="isMfaStep ? 'fa-shield-halved' : 'fa-envelope'"></i>
+              <span>{{ isMfaStep ? 'Step 1: Google Authenticator' : 'Step 2: Email Security OTP' }}</span>
+            </div>
+
+            <h2 class="text-2xl sm:text-3xl font-bold mb-2" style="color: var(--text-primary)">
+              {{ isMfaStep ? 'Google 2FA Verification' : 'Enterprise Email OTP' }}
+            </h2>
             <p class="text-xs sm:text-sm" style="color: var(--text-secondary)">
-              Enter the 6-digit verification code sent to your email
+              {{ isMfaStep ? 'Enter the 6-digit code generated in your Google Authenticator app' : 'Enter the 6-digit verification code sent to your email' }}
             </p>
           </div>
 
@@ -110,7 +128,7 @@ import { LoaderService } from '../../services/loader.service';
               [disabled]="otpValue.length !== 6"
               class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 flex items-center justify-center text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-600/20 hover:shadow-indigo-600/30 transition-all transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 cursor-pointer"
             >
-              Verify OTP & Continue
+              <span>{{ isMfaStep ? 'Verify Google 2FA Code' : 'Verify Email OTP & Access Portal' }}</span>
             </button>
           </form>
 
@@ -118,7 +136,7 @@ import { LoaderService } from '../../services/loader.service';
             <button (click)="goBack()" class="hover:text-indigo-500 transition-colors font-medium cursor-pointer">
               ← Back to Login
             </button>
-            <button (click)="resendOtp()" class="text-indigo-500 hover:underline font-bold cursor-pointer">
+            <button *ngIf="!isMfaStep" (click)="resendOtp()" class="text-indigo-500 hover:underline font-bold cursor-pointer">
               Resend OTP Email
             </button>
           </div>
@@ -162,6 +180,7 @@ import { LoaderService } from '../../services/loader.service';
 export class EnterpriseOtpComponent implements OnInit {
   otpValue = '';
   tempToken: string | null = null;
+  isMfaStep = false;
 
   constructor(
     private router: Router,
@@ -178,6 +197,7 @@ export class EnterpriseOtpComponent implements OnInit {
     const isBrowser = isPlatformBrowser(this.platformId);
     const stateObj = (isBrowser && typeof history !== 'undefined') ? history.state : null;
     this.tempToken = stateObj?.token || stateObj?.temp_token || this.route.snapshot.paramMap.get('token');
+    this.isMfaStep = !!(stateObj?.mfa_pending || this.route.snapshot.queryParamMap.get('mfa'));
   }
 
   onInput(event: any): void {
@@ -188,7 +208,7 @@ export class EnterpriseOtpComponent implements OnInit {
     event.preventDefault();
     if (!isPlatformBrowser(this.platformId)) return;
     if (this.otpValue.length !== 6) {
-      this.notification.error('Please enter a valid 6-digit OTP code.');
+      this.notification.error('Please enter a valid 6-digit code.');
       return;
     }
 
@@ -197,32 +217,59 @@ export class EnterpriseOtpComponent implements OnInit {
 
     const baseUrl = environment.backendUrl ? environment.backendUrl.replace(/\/+$/, '') : '';
 
-    this.http.post<any>(`${baseUrl}/v1/enterprise/portal/verify-otp`, {
-      otp: this.otpValue,
-      temp_token: this.tempToken
-    }, {
-      withCredentials: true,
-      headers: { Authorization: `Bearer ${this.tempToken}` }
-    }).pipe(
-      finalize(() => {
-        this.loader.hide();
-        this.cdr.detectChanges();
-      })
-    ).subscribe({
-      next: (res) => {
-        const user = res.user;
-        const name = user.first_name && user.last_name 
-          ? `${user.first_name} ${user.last_name}` 
-          : (user.name || user.email);
+    if (this.isMfaStep) {
+      // Step 1: Verify Google Authenticator 2FA TOTP code
+      this.http.post<any>(`${baseUrl}/v1/enterprise/portal/verify-2fa`, {
+        code: this.otpValue,
+        temp_token: this.tempToken
+      }, {
+        withCredentials: true,
+        headers: { Authorization: `Bearer ${this.tempToken}` }
+      }).pipe(
+        finalize(() => {
+          this.loader.hide();
+          this.cdr.detectChanges();
+        })
+      ).subscribe({
+        next: (res) => {
+          this.tempToken = res.temp_token;
+          this.otpValue = '';
+          this.isMfaStep = false;
+          this.notification.success('Google 2FA code verified! OTP sent to your email.');
+        },
+        error: (err) => {
+          this.notification.error(err.error?.message || 'Invalid 2FA code. Please check your Google Authenticator app.');
+        }
+      });
+    } else {
+      // Step 2: Verify Email OTP code
+      this.http.post<any>(`${baseUrl}/v1/enterprise/portal/verify-otp`, {
+        otp: this.otpValue,
+        temp_token: this.tempToken
+      }, {
+        withCredentials: true,
+        headers: { Authorization: `Bearer ${this.tempToken}` }
+      }).pipe(
+        finalize(() => {
+          this.loader.hide();
+          this.cdr.detectChanges();
+        })
+      ).subscribe({
+        next: (res) => {
+          const user = res.user;
+          const name = user.first_name && user.last_name 
+            ? `${user.first_name} ${user.last_name}` 
+            : (user.name || user.email);
 
-        this.sessionService.saveUser(user.email, name, user.role, user.user_id, user.avatar_url);
-        this.notification.success('2FA verification successful!');
-        this.router.navigate(['/dashboard']);
-      },
-      error: (err) => {
-        this.notification.error(err.error?.message || 'Invalid or expired OTP code.');
-      }
-    });
+          this.sessionService.saveUser(user.email, name, user.role, user.user_id, user.avatar_url);
+          this.notification.success('Enterprise login successful!');
+          this.router.navigate(['/dashboard']);
+        },
+        error: (err) => {
+          this.notification.error(err.error?.message || 'Invalid or expired OTP code.');
+        }
+      });
+    }
   }
 
   resendOtp(): void {
