@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, Inject, Optional, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
@@ -6,6 +6,7 @@ import { EnterpriseService, Enterprise } from '../../services/enterprise.service
 import { SessionService } from '../../services/session.service';
 import { NotificationService } from '../../services/notification.service';
 import { LoaderService } from '../../services/loader.service';
+import { EnterpriseLayoutComponent } from '../layout/enterprise-layout.component';
 
 @Component({
   selector: 'app-enterprise-settings',
@@ -242,6 +243,37 @@ import { LoaderService } from '../../services/loader.service';
       <!-- SECTION 2: SECURITY & PASSWORD CHANGE (WITH MANDATORY OTP) -->
       <div *ngIf="activeTab === 'security'" class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
         
+        <!-- Google Authenticator (2FA) Security Card -->
+        <div class="p-6 sm:p-7 border-b border-slate-100 bg-slate-50/30 space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
+                   [ngClass]="(profile?.mfa_enabled || profile?.is_2fa_enabled) ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-amber-50 text-amber-600 border border-amber-100'">
+                <i class="fa-solid" [ngClass]="(profile?.mfa_enabled || profile?.is_2fa_enabled) ? 'fa-shield-halved text-lg' : 'fa-triangle-exclamation text-lg'"></i>
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <h4 class="text-sm font-extrabold text-slate-900">Google Authenticator (2FA)</h4>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border"
+                        [ngClass]="(profile?.mfa_enabled || profile?.is_2fa_enabled) ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'">
+                    {{ (profile?.mfa_enabled || profile?.is_2fa_enabled) ? 'ENABLED & PROTECTED' : 'NOT ENABLED' }}
+                  </span>
+                </div>
+                <p class="text-xs text-slate-500 mt-0.5">Protect account access, API key creation, and automated payouts using Google Authenticator.</p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              (click)="trigger2faSetupModal()"
+              class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer shrink-0"
+              [ngClass]="(profile?.mfa_enabled || profile?.is_2fa_enabled) ? 'bg-indigo-50 text-indigo-600 border border-indigo-200 hover:bg-indigo-100' : 'bg-indigo-600 text-white hover:bg-indigo-700'">
+              <i class="fa-solid fa-lock text-xs"></i>
+              <span>{{ (profile?.mfa_enabled || profile?.is_2fa_enabled) ? 'Re-configure Google 2FA' : 'Setup Google Authenticator (2FA)' }}</span>
+            </button>
+          </div>
+        </div>
+
         <div class="p-6 sm:p-7 border-b border-slate-100 bg-slate-50/50 flex items-center gap-3">
           <div class="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shrink-0">
             <i class="fa-solid fa-key text-base"></i>
@@ -459,8 +491,17 @@ export class EnterpriseSettingsComponent implements OnInit {
     private notification: NotificationService,
     private loader: LoaderService,
     private cdr: ChangeDetectorRef,
-    @Inject(PLATFORM_ID) private platformId: Object
+    @Optional() @Inject(EnterpriseLayoutComponent) private layout?: EnterpriseLayoutComponent,
+    @Inject(PLATFORM_ID) private platformId: Object = {}
   ) {}
+
+  trigger2faSetupModal(): void {
+    if (this.layout) {
+      this.layout.open2faSetupModal();
+    } else {
+      this.notification.info('Please click the "Enable 2FA" button in the top navigation bar to setup Google Authenticator.');
+    }
+  }
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {

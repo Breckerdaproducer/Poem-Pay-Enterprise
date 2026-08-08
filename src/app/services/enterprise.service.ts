@@ -11,6 +11,8 @@ export interface Enterprise {
   phone?: string;
   logo_url?: string;
   avatar_url?: string;
+  mfa_enabled?: boolean;
+  is_2fa_enabled?: boolean;
   status: 'ACTIVE' | 'SUSPENDED' | 'PENDING';
   environment: 'TEST' | 'LIVE';
   webhook_url?: string;
@@ -550,6 +552,51 @@ export class EnterpriseService {
       `${this.baseUrl}/v1/enterprise/portal/change-password`,
       data,
       { withCredentials: true }
+    );
+  }
+
+  get2faStatus(): Observable<{ mfa_enabled: boolean; is_2fa_enabled: boolean }> {
+    return this.http.get<{ mfa_enabled: boolean; is_2fa_enabled: boolean }>(
+      `${this.baseUrl}/v1/enterprise/portal/2fa/status`,
+      { withCredentials: true }
+    );
+  }
+
+  generate2fa(): Observable<{ secret: string; qrCodeDataUrl: string }> {
+    return this.http.post<{ secret: string; qrCodeDataUrl: string }>(
+      `${this.baseUrl}/v1/enterprise/portal/2fa/generate`,
+      {},
+      { withCredentials: true }
+    );
+  }
+
+  enable2fa(code: string): Observable<any> {
+    return this.http.post<any>(
+      `${this.baseUrl}/v1/enterprise/portal/2fa/enable`,
+      { code },
+      { withCredentials: true }
+    ).pipe(
+      tap(() => {
+        const current = this.enterpriseSubject.getValue();
+        if (current) {
+          this.enterpriseSubject.next({ ...current, mfa_enabled: true, is_2fa_enabled: true });
+        }
+      })
+    );
+  }
+
+  disable2fa(code: string): Observable<any> {
+    return this.http.post<any>(
+      `${this.baseUrl}/v1/enterprise/portal/2fa/disable`,
+      { code },
+      { withCredentials: true }
+    ).pipe(
+      tap(() => {
+        const current = this.enterpriseSubject.getValue();
+        if (current) {
+          this.enterpriseSubject.next({ ...current, mfa_enabled: false, is_2fa_enabled: false });
+        }
+      })
     );
   }
 }

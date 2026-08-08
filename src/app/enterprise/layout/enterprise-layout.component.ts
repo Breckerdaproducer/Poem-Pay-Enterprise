@@ -2,6 +2,7 @@ import { Component, OnInit, Inject, PLATFORM_ID, ChangeDetectorRef } from '@angu
 import { CommonModule, DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs/operators';
+import { FormsModule } from '@angular/forms';
 import { SessionService } from '../../services/session.service';
 
 import { EnterpriseService, Enterprise } from '../../services/enterprise.service';
@@ -10,7 +11,7 @@ import { LoaderService } from '../../services/loader.service';
 @Component({
   selector: 'app-enterprise-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   template: `
     <div class="dashboard-wrapper flex h-screen overflow-hidden font-sans transition-colors duration-500"
          [class.light-mode]="isLightMode">
@@ -153,6 +154,17 @@ import { LoaderService } from '../../services/loader.service';
 
           <div class="flex items-center gap-1.5 sm:gap-4 shrink-0">
 
+            <!-- 2FA Security Pill Button -->
+            <button
+              (click)="open2faSetupModal()"
+              class="px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all border flex items-center gap-1.5 cursor-pointer shadow-xs"
+              [ngClass]="(profile?.mfa_enabled || profile?.is_2fa_enabled) ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'"
+              [title]="(profile?.mfa_enabled || profile?.is_2fa_enabled) ? 'Google 2FA Active' : 'Setup Google 2FA Protection'"
+            >
+              <i class="fa-solid" [ngClass]="(profile?.mfa_enabled || profile?.is_2fa_enabled) ? 'fa-shield-halved text-emerald-600' : 'fa-triangle-exclamation text-amber-600 animate-pulse'"></i>
+              <span class="hidden sm:inline">{{ (profile?.mfa_enabled || profile?.is_2fa_enabled) ? '2FA Active' : 'Enable 2FA' }}</span>
+            </button>
+
             <a
               routerLink="/docs"
               class="px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all border flex items-center gap-1.5 sm:gap-2 bg-indigo-50 text-indigo-600 border-indigo-200 hover:bg-indigo-600 hover:text-white shadow-xs"
@@ -195,6 +207,97 @@ import { LoaderService } from '../../services/loader.service';
           </div>
         </div>
       </main>
+
+      <!-- Google Authenticator 2FA Security Setup Modal Popup -->
+      <div *ngIf="show2faModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-300">
+        <div class="relative w-full max-w-md bg-slate-900 border border-slate-700/80 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 text-white overflow-hidden">
+
+          <!-- Glowing Security Glow Background -->
+          <div class="absolute -top-24 -right-24 w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+          <!-- Header Badge & Title -->
+          <div class="text-center space-y-2 relative">
+            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-extrabold uppercase tracking-wider mb-1">
+              <i class="fa-solid fa-shield-halved"></i> Security Requirement
+            </div>
+            <h2 class="text-xl font-bold tracking-tight">Enable Google Authenticator</h2>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              Protect your Enterprise balance, API key creation, and payouts with 2-Factor Authentication (2FA).
+            </p>
+          </div>
+
+          <!-- QR Code Container -->
+          <div class="flex flex-col items-center justify-center p-4 rounded-2xl border border-slate-800 bg-slate-950/60 relative">
+            <div *ngIf="loading2faQr" class="py-8 flex flex-col items-center gap-3">
+              <div class="w-8 h-8 rounded-full border-2 border-indigo-500/20 border-t-indigo-500 animate-spin"></div>
+              <span class="text-xs text-slate-400 font-semibold">Generating 2FA QR Code...</span>
+            </div>
+
+            <div *ngIf="!loading2faQr && qrCodeDataUrl" class="flex flex-col items-center space-y-3 w-full">
+              <!-- QR Code Frame -->
+              <div class="p-3 bg-white rounded-2xl shadow-lg border border-indigo-200">
+                <img [src]="qrCodeDataUrl" alt="2FA QR Code" class="w-44 h-44 object-contain" />
+              </div>
+              
+              <!-- Instructions -->
+              <p class="text-[11px] text-center text-slate-300 font-medium max-w-xs">
+                Scan this QR code using <span class="text-indigo-400 font-bold">Google Authenticator</span> or <span class="text-indigo-400 font-bold">Authy</span>.
+              </p>
+
+              <!-- Secret Key Copy Box -->
+              <div *ngIf="secretKey" class="w-full flex items-center justify-between p-2.5 rounded-xl border border-indigo-500/20 bg-indigo-500/10 text-xs font-mono">
+                <div class="flex flex-col min-w-0 pr-2">
+                  <span class="text-[9px] uppercase font-bold text-slate-400">Secret Key</span>
+                  <span class="text-indigo-300 font-bold truncate tracking-widest">{{ secretKey }}</span>
+                </div>
+                <button (click)="copy2faSecret()" type="button" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-[10px] font-bold transition-all active:scale-95 cursor-pointer shrink-0">
+                  Copy
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- TOTP Code Form -->
+          <form (submit)="onVerify2fa($event)" class="space-y-4">
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5 text-center">
+                Enter 6-Digit Authenticator Code
+              </label>
+              <input 
+                type="text" 
+                [(ngModel)]="totpCode" 
+                name="totpCode" 
+                maxLength="6" 
+                placeholder="000 000" 
+                autocomplete="off"
+                class="w-full px-4 py-3 border border-slate-700 bg-slate-950 text-white rounded-xl text-lg text-center font-bold tracking-[0.5em] outline-none font-mono transition-all focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500" 
+              />
+              <p *ngIf="totpError" class="text-xs text-red-400 text-center font-semibold mt-1.5">
+                {{ totpError }}
+              </p>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <button 
+                type="button" 
+                (click)="dismiss2faModal()" 
+                class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-all cursor-pointer">
+                Remind Me Later
+              </button>
+
+              <button 
+                type="submit" 
+                [disabled]="totpCode.trim().length !== 6 || submitting2fa" 
+                class="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl text-xs font-bold uppercase shadow-lg shadow-indigo-600/25 transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-lock text-xs" *ngIf="!submitting2fa"></i>
+                <span *ngIf="!submitting2fa">Verify & Enable</span>
+                <span *ngIf="submitting2fa">Verifying...</span>
+              </button>
+            </div>
+          </form>
+
+        </div>
+      </div>
 
     </div>
   `,
@@ -239,6 +342,16 @@ export class EnterpriseLayoutComponent implements OnInit {
   logoFailed = false;
   avatarFailed = false;
 
+  // 2FA Google Authenticator Modal State
+  show2faModal = false;
+  loading2faQr = false;
+  qrCodeDataUrl: string | null = null;
+  secretKey: string | null = null;
+  totpCode = '';
+  submitting2fa = false;
+  totpError = '';
+  mfaDismissed = false;
+
   menuItems = [
     { label: 'Overview & Telemetry', route: '/dashboard', icon: 'fa-solid fa-chart-pie' },
     { label: 'API Key Credentials', route: '/api-keys', icon: 'fa-solid fa-key' },
@@ -272,12 +385,84 @@ export class EnterpriseLayoutComponent implements OnInit {
       this.enterpriseService.enterprise$.subscribe(profile => {
         if (profile) {
           this.profile = profile;
+          const is2faActive = profile.mfa_enabled || profile.is_2fa_enabled || (profile.user as any)?.mfa_enabled;
+          if (!is2faActive && !this.mfaDismissed && !this.show2faModal) {
+            this.open2faSetupModal();
+          }
           this.cdr.markForCheck();
         }
       });
       this.enterpriseService.getPortalProfile().subscribe();
       this.updateTheme();
     }
+  }
+
+  open2faSetupModal(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    this.show2faModal = true;
+    this.totpCode = '';
+    this.totpError = '';
+    if (!this.qrCodeDataUrl) {
+      this.initiate2faSetup();
+    }
+  }
+
+  initiate2faSetup(): void {
+    this.loading2faQr = true;
+    this.totpError = '';
+    this.enterpriseService.generate2fa().subscribe({
+      next: (res) => {
+        this.loading2faQr = false;
+        this.qrCodeDataUrl = res.qrCodeDataUrl;
+        this.secretKey = res.secret;
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.loading2faQr = false;
+        this.totpError = err.error?.message || 'Could not generate 2FA QR code. Please try again.';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  onVerify2fa(event: Event): void {
+    event.preventDefault();
+    if (!this.totpCode || this.totpCode.trim().length !== 6) {
+      this.totpError = 'Please enter a valid 6-digit Google Authenticator code';
+      return;
+    }
+    this.submitting2fa = true;
+    this.totpError = '';
+    this.enterpriseService.enable2fa(this.totpCode.trim()).pipe(
+      finalize(() => {
+        this.submitting2fa = false;
+        this.cdr.markForCheck();
+      })
+    ).subscribe({
+      next: () => {
+        this.show2faModal = false;
+        if (this.profile) {
+          this.profile.mfa_enabled = true;
+          this.profile.is_2fa_enabled = true;
+        }
+        alert('Google Authenticator (2FA) has been successfully enabled for your Enterprise account!');
+      },
+      error: (err) => {
+        this.totpError = err.error?.message || 'Invalid 2FA code. Please double-check your Google Authenticator app.';
+      }
+    });
+  }
+
+  copy2faSecret(): void {
+    if (this.secretKey && isPlatformBrowser(this.platformId)) {
+      navigator.clipboard.writeText(this.secretKey);
+      alert('Secret key copied to clipboard!');
+    }
+  }
+
+  dismiss2faModal(): void {
+    this.mfaDismissed = true;
+    this.show2faModal = false;
   }
 
   toggleTheme(): void {
