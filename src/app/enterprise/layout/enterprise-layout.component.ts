@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs/operators';
@@ -331,7 +331,7 @@ import { LoaderService } from '../../services/loader.service';
     }
   `]
 })
-export class EnterpriseLayoutComponent implements OnInit {
+export class EnterpriseLayoutComponent implements OnInit, OnDestroy {
   isLightMode = true;
   sidebarOpen = false;
   sidebarCollapsed = false;
@@ -340,6 +340,11 @@ export class EnterpriseLayoutComponent implements OnInit {
   currentUser: any = null;
   logoFailed = false;
   avatarFailed = false;
+
+  // 10-Minute Inactivity Auto-Logout State
+  private inactivityTimer: any = null;
+  private readonly INACTIVITY_TIMEOUT_MS = 10 * 60 * 1000;
+  private unbindActivityListeners: (() => void)[] = [];
 
   // 2FA Google Authenticator Modal State
   show2faModal = false;
@@ -373,6 +378,7 @@ export class EnterpriseLayoutComponent implements OnInit {
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
+      this.setupInactivityListener();
       if (sessionStorage.getItem('poempay_mfa_dismissed') === 'true') {
         this.mfaDismissed = true;
       }
@@ -497,6 +503,44 @@ export class EnterpriseLayoutComponent implements OnInit {
       .join('')
       .substring(0, 2)
       .toUpperCase() || 'EA';
+  }
+
+  private setupInactivityListener(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
+    const handleUserActivity = () => this.resetInactivityTimer();
+
+    events.forEach(eventName => {
+      window.addEventListener(eventName, handleUserActivity, { passive: true });
+      this.unbindActivityListeners.push(() => {
+        window.removeEventListener(eventName, handleUserActivity);
+      });
+    });
+
+    this.resetInactivityTimer();
+  }
+
+  private resetInactivityTimer(): void {
+    if (this.inactivityTimer) {
+      clearTimeout(this.inactivityTimer);
+    }
+    this.inactivityTimer = setTimeout(() => {
+      this.handleAutoLogout();
+    }, this.INACTIVITY_TIMEOUT_MS);
+  }
+
+  private handleAutoLogout(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    alert('Your Enterprise session has timed out due to 10 minutes of inactivity. Please log in again.');
+    this.onLogout();
+  }
+
+  ngOnDestroy(): void {
+    if (this.inactivityTimer) {
+      clearTimeout(this.inactivityTimer);
+    }
+    this.unbindActivityListeners.forEach(unbind => unbind());
   }
 
   onLogout(): void {
