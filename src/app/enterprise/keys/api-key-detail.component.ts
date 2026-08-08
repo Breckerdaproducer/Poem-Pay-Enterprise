@@ -414,8 +414,8 @@ import { WebsocketService } from '../../services/websocket.service';
             </div>
 
             <!-- Refresh Button -->
-            <button (click)="loadKeyDetails()" class="px-3.5 py-1.5 border border-slate-200/80 rounded-xl text-xs font-bold flex items-center gap-2 bg-slate-50 text-slate-700 hover:bg-slate-100 cursor-pointer transition-all">
-              <i class="fa-solid fa-arrows-rotate text-xs"></i> Refresh History
+            <button (click)="loadKeyTransactions(1)" class="px-3.5 py-1.5 border border-slate-200/80 rounded-xl text-xs font-bold flex items-center gap-2 bg-slate-50 text-slate-700 hover:bg-slate-100 cursor-pointer transition-all">
+              <i class="fa-solid fa-arrows-rotate text-xs" [ngClass]="{'fa-spin': isLoadingTxns}"></i> Refresh History
             </button>
           </div>
 
@@ -518,6 +518,41 @@ import { WebsocketService } from '../../services/websocket.service';
                 </tr>
               </tbody>
             </table>
+          </div>
+
+          <!-- Table Pagination Controls Footer (Identical to Real-Time Transactions Page) -->
+          <div *ngIf="totalItems > 0 || allPortalTransactions.length > 0" class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-3 border-t border-slate-100 text-xs font-semibold text-slate-500">
+            
+            <div class="flex items-center gap-3">
+              <span>Rows per page:</span>
+              <select [(ngModel)]="pageSize" (ngModelChange)="onPageSizeChange()" class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 font-bold text-xs">
+                <option [ngValue]="10">10</option>
+                <option [ngValue]="25">25</option>
+                <option [ngValue]="50">50</option>
+                <option [ngValue]="100">100</option>
+              </select>
+            </div>
+
+            <div class="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 w-full sm:w-auto">
+              <span>Page <strong>{{ currentPage }}</strong> of <strong>{{ totalPages }}</strong></span>
+              
+              <div class="flex items-center gap-1">
+                <button 
+                  (click)="goToPage(currentPage - 1)" 
+                  [disabled]="currentPage === 1 || isLoadingTxns"
+                  class="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 disabled:opacity-40 cursor-pointer">
+                  <i class="fa-solid fa-chevron-left text-xs"></i>
+                </button>
+
+                <button 
+                  (click)="goToPage(currentPage + 1)" 
+                  [disabled]="currentPage >= totalPages || isLoadingTxns"
+                  class="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 disabled:opacity-40 cursor-pointer">
+                  <i class="fa-solid fa-chevron-right text-xs"></i>
+                </button>
+              </div>
+            </div>
+
           </div>
 
         </div>
@@ -1166,6 +1201,13 @@ export class ApiKeyDetailComponent implements OnInit, OnDestroy {
   permissionOtpSent = false;
   permissionError = '';
 
+  // Pagination State for API Key Transactions Table
+  currentPage = 1;
+  pageSize = 10;
+  totalItems = 0;
+  totalPages = 1;
+  isLoadingTxns = false;
+
   private subscriptions: Subscription[] = [];
   private depositPollTimer: any = null;
   private withdrawPollTimer: any = null;
@@ -1332,6 +1374,61 @@ export class ApiKeyDetailComponent implements OnInit, OnDestroy {
     this.router.navigate(['/enterprise/api-keys']);
   }
 
+  loadKeyTransactions(page = this.currentPage): void {
+    if (!this.keyId || !isPlatformBrowser(this.platformId)) return;
+    this.isLoadingTxns = true;
+    this.currentPage = page;
+
+    this.enterpriseService.getPortalTransactions(
+      this.currentPage,
+      this.pageSize,
+      undefined,
+      undefined,
+      'DATE_DESC',
+      undefined,
+      this.keyId
+    ).pipe(
+      finalize(() => {
+        this.isLoadingTxns = false;
+        this.cdr.markForCheck();
+      })
+    ).subscribe({
+      next: (res) => {
+        if (res && res.data) {
+          this.allPortalTransactions = res.data;
+          if (res.meta) {
+            this.totalItems = res.meta.total_items || res.data.length;
+            this.totalPages = res.meta.total_pages || Math.ceil(this.totalItems / this.pageSize) || 1;
+          } else {
+            this.totalItems = res.data.length;
+            this.totalPages = Math.ceil(this.totalItems / this.pageSize) || 1;
+          }
+        } else if (Array.isArray(res)) {
+          this.allPortalTransactions = res;
+          this.totalItems = res.length;
+          this.totalPages = Math.ceil(this.totalItems / this.pageSize) || 1;
+        }
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.allPortalTransactions = [];
+        this.totalItems = 0;
+        this.totalPages = 1;
+      }
+    });
+  }
+
+  onPageSizeChange(): void {
+    this.currentPage = 1;
+    this.loadKeyTransactions(1);
+  }
+
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages || page === this.currentPage) return;
+    this.currentPage = page;
+    this.loadKeyTransactions(page);
+  }
+
   loadKeyDetails(isSilent = false): void {
     if (!this.keyId || !isPlatformBrowser(this.platformId)) return;
 
@@ -1340,16 +1437,7 @@ export class ApiKeyDetailComponent implements OnInit, OnDestroy {
       this.cdr.detectChanges();
     }
 
-    this.enterpriseService.getPortalTransactions(1, 100, undefined, undefined, 'DATE_DESC', undefined, this.keyId).subscribe({
-      next: (res) => {
-        if (res && res.data) {
-          this.allPortalTransactions = res.data;
-        } else if (Array.isArray(res)) {
-          this.allPortalTransactions = res;
-        }
-        this.cdr.markForCheck();
-      }
-    });
+    this.loadKeyTransactions(this.currentPage);
 
     this.enterpriseService.getApiKeyDetails(this.keyId).pipe(
       finalize(() => {
