@@ -246,10 +246,9 @@ import { EnterpriseLayoutComponent } from '../layout/enterprise-layout.component
         <!-- Google Authenticator (2FA) Security Card -->
         <div class="p-6 sm:p-7 border-b border-slate-100 bg-slate-50/30 space-y-4">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
-                   [ngClass]="(profile?.mfa_enabled || profile?.is_2fa_enabled) ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-amber-50 text-amber-600 border border-amber-100'">
-                <i class="fa-solid" [ngClass]="(profile?.mfa_enabled || profile?.is_2fa_enabled) ? 'fa-shield-halved text-lg' : 'fa-triangle-exclamation text-lg'"></i>
+            <div class="flex items-center gap-3.5">
+              <div class="w-12 h-12 p-2.5 bg-white rounded-2xl flex items-center justify-center border border-slate-200 shadow-xs shrink-0">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Google_Authenticator_%28April_2023%29.svg/960px-Google_Authenticator_%28April_2023%29.svg.png?_=20230427070223" alt="Google Authenticator" class="w-full h-full object-contain">
               </div>
               <div>
                 <div class="flex items-center gap-2">

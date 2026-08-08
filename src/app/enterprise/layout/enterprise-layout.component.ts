@@ -216,9 +216,12 @@ import { LoaderService } from '../../services/loader.service';
           <div class="absolute -top-24 -right-24 w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
 
           <!-- Header Badge & Title -->
-          <div class="text-center space-y-2 relative">
-            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-extrabold uppercase tracking-wider mb-1">
-              <i class="fa-solid fa-shield-halved"></i> Security Requirement
+          <div class="flex flex-col items-center text-center space-y-2 relative">
+            <div class="w-14 h-14 p-2.5 bg-slate-800/80 rounded-2xl flex items-center justify-center border border-slate-700/80 shadow-md mb-1">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Google_Authenticator_%28April_2023%29.svg/960px-Google_Authenticator_%28April_2023%29.svg.png?_=20230427070223" alt="Google Authenticator" class="w-full h-full object-contain">
+            </div>
+            <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[11px] font-extrabold uppercase tracking-wider">
+              <i class="fa-solid fa-shield-halved"></i> Google 2FA Security
             </div>
             <h2 class="text-xl font-bold tracking-tight">Enable Google Authenticator</h2>
             <p class="text-xs text-slate-300 leading-relaxed">

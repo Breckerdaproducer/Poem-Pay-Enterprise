@@ -36,6 +36,10 @@ import { LoaderService } from '../../services/loader.service';
         </div>
 
         <div class="relative z-10 max-w-lg">
+          <div *ngIf="isMfaStep" class="w-20 h-20 mb-6 p-4 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/15 shadow-xl">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Google_Authenticator_%28April_2023%29.svg/960px-Google_Authenticator_%28April_2023%29.svg.png?_=20230427070223" alt="Google Authenticator Logo" class="w-full h-full object-contain">
+          </div>
+
           <h1 *ngIf="isMfaStep" class="text-4xl xl:text-5xl font-bold text-white leading-tight mb-6">
             Google <br />
             Authenticator <br />
@@ -59,7 +63,7 @@ import { LoaderService } from '../../services/loader.service';
           <div class="border rounded-2xl p-6 backdrop-blur-sm" style="background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.06)">
             <div class="flex gap-4">
               <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center shrink-0">
-                <i *ngIf="isMfaStep" class="fa-solid fa-mobile-screen-button text-indigo-400 text-xl"></i>
+                <img *ngIf="isMfaStep" src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Google_Authenticator_%28April_2023%29.svg/960px-Google_Authenticator_%28April_2023%29.svg.png?_=20230427070223" alt="Google Authenticator" class="w-7 h-7 object-contain">
                 <i *ngIf="!isMfaStep" class="fa-solid fa-envelope-circle-check text-indigo-400 text-xl"></i>
               </div>
               <div>
@@ -81,7 +85,11 @@ import { LoaderService } from '../../services/loader.service';
       <div class="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-8 lg:p-12">
         <div class="w-full max-w-md">
           
-          <div class="mb-8 text-center lg:text-left">
+          <div class="mb-8 flex flex-col items-center lg:items-start text-center lg:text-left">
+            <div *ngIf="isMfaStep" class="w-16 h-16 mb-4 p-3 bg-slate-50 dark:bg-slate-900 rounded-2xl flex items-center justify-center border border-slate-200 dark:border-slate-800 shadow-sm">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Google_Authenticator_%28April_2023%29.svg/960px-Google_Authenticator_%28April_2023%29.svg.png?_=20230427070223" alt="Google Authenticator" class="w-full h-full object-contain">
+            </div>
+
             <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 text-xs font-extrabold uppercase tracking-wider mb-3">
               <i class="fa-solid" [ngClass]="isMfaStep ? 'fa-shield-halved' : 'fa-envelope'"></i>
               <span>{{ isMfaStep ? 'Step 1: Google Authenticator' : 'Step 2: Email Security OTP' }}</span>
