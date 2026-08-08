@@ -69,7 +69,7 @@ export class SessionService {
       .join('')
       .substring(0, 2)
       .toUpperCase() || 'AD';
-    const resolvedRole = role || 'Admin';
+    const resolvedRole = role || 'Enterprise';
     const resolvedAvatar = this.resolveImageUrl(avatar_url);
     const userData: UserSession = { email, name, role: resolvedRole, initials, user_id, avatar_url: resolvedAvatar };
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(userData));
@@ -89,12 +89,8 @@ export class SessionService {
 
   logout(): Observable<any> {
     if (!this.isBrowser()) return of(null);
-    const user = this.getUser();
-    const isEnterprise = user?.role?.toLowerCase().includes('enterprise');
     const baseUrl = environment.backendUrl ? environment.backendUrl.replace(/\/+$/, '') : '';
-    const logoutUrl = isEnterprise
-      ? `${baseUrl}/v1/enterprise/portal/logout`
-      : `${baseUrl}/admin/auth/logout`;
+    const logoutUrl = `${baseUrl}/v1/enterprise/portal/logout`;
 
     return this.http.post<any>(logoutUrl, {}, { withCredentials: true }).pipe(
       map(res => {
@@ -102,19 +98,8 @@ export class SessionService {
         return res;
       }),
       catchError(() => {
-        const fallbackUrl = isEnterprise
-          ? `${baseUrl}/admin/auth/logout`
-          : `${baseUrl}/v1/enterprise/portal/logout`;
-        return this.http.post<any>(fallbackUrl, {}, { withCredentials: true }).pipe(
-          map(res => {
-            this.clearUser();
-            return res;
-          }),
-          catchError(() => {
-            this.clearUser();
-            return of(null);
-          })
-        );
+        this.clearUser();
+        return of(null);
       })
     );
   }
