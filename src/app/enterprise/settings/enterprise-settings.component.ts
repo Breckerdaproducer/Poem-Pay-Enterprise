@@ -262,14 +262,28 @@ import { EnterpriseLayoutComponent } from '../layout/enterprise-layout.component
               </div>
             </div>
 
-            <button
-              type="button"
-              (click)="trigger2faSetupModal()"
-              class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer shrink-0"
-              [ngClass]="(profile?.mfa_enabled || profile?.is_2fa_enabled) ? 'bg-indigo-50 text-indigo-600 border border-indigo-200 hover:bg-indigo-100' : 'bg-indigo-600 text-white hover:bg-indigo-700'">
-              <i class="fa-solid fa-lock text-xs"></i>
-              <span>{{ (profile?.mfa_enabled || profile?.is_2fa_enabled) ? 'Re-configure Google 2FA' : 'Setup Google Authenticator (2FA)' }}</span>
-            </button>
+            <!-- Action Buttons based on 2FA status -->
+            <div class="flex items-center gap-2 shrink-0">
+              <!-- When 2FA IS Active -> Show Disable 2FA Button -->
+              <button
+                *ngIf="profile?.mfa_enabled || profile?.is_2fa_enabled"
+                type="button"
+                (click)="openDisable2faModal()"
+                class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100">
+                <i class="fa-solid fa-lock-open text-xs"></i>
+                <span>Disable Google 2FA</span>
+              </button>
+
+              <!-- When 2FA is NOT Active -> Show Setup 2FA Button -->
+              <button
+                *ngIf="!profile?.mfa_enabled && !profile?.is_2fa_enabled"
+                type="button"
+                (click)="trigger2faSetupModal()"
+                class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer bg-indigo-600 text-white hover:bg-indigo-700">
+                <i class="fa-solid fa-lock text-xs"></i>
+                <span>Setup Google Authenticator (2FA)</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -448,6 +462,70 @@ import { EnterpriseLayoutComponent } from '../layout/enterprise-layout.component
 
       </div>
 
+      <!-- Disable 2FA Confirmation Modal -->
+      <div *ngIf="showDisable2faModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+        <div class="w-full max-w-md bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-7 space-y-5 shadow-2xl text-slate-900">
+          
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3.5">
+            <div class="flex items-center gap-2.5">
+              <div class="w-10 h-10 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600">
+                <i class="fa-solid fa-triangle-exclamation text-base"></i>
+              </div>
+              <div>
+                <h3 class="text-base font-extrabold text-slate-900 leading-tight">Disable Google 2FA</h3>
+                <p class="text-xs text-slate-500">Confirm 2FA security deactivation</p>
+              </div>
+            </div>
+            
+            <button (click)="closeDisable2faModal()" class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
+              <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+          </div>
+
+          <div class="space-y-4">
+            <p class="text-xs text-slate-600 leading-relaxed">
+              Enter your current 6-digit code from your <strong class="text-slate-900">Google Authenticator</strong> app to confirm disabling 2-Factor Authentication.
+            </p>
+
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5 text-center">
+                Enter 6-Digit Authenticator Code
+              </label>
+              <input
+                type="text"
+                [(ngModel)]="disable2faCode"
+                maxlength="6"
+                placeholder="000 000"
+                class="w-full px-4 py-3 border border-slate-300 rounded-2xl text-lg font-mono font-extrabold tracking-[0.5em] text-center text-slate-900 bg-slate-50 focus:border-rose-500 focus:bg-white focus:outline-none shadow-xs"
+              />
+              <p *ngIf="disable2faError" class="text-xs font-bold text-rose-600 text-center mt-1.5">
+                {{ disable2faError }}
+              </p>
+            </div>
+
+            <div class="flex items-center gap-3 pt-2">
+              <button 
+                type="button"
+                (click)="closeDisable2faModal()" 
+                class="w-1/2 py-3 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 cursor-pointer">
+                Cancel
+              </button>
+              
+              <button 
+                type="button"
+                (click)="confirmDisable2fa()" 
+                [disabled]="disabling2fa || !disable2faCode || disable2faCode.trim().length !== 6"
+                class="w-1/2 py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50">
+                <i *ngIf="!disabling2fa" class="fa-solid fa-lock-open text-xs"></i>
+                <i *ngIf="disabling2fa" class="fa-solid fa-circle-notch fa-spin text-xs"></i>
+                <span>{{ disabling2fa ? 'Disabling...' : 'Confirm & Disable' }}</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
     </div>
   `
 })
@@ -494,12 +572,57 @@ export class EnterpriseSettingsComponent implements OnInit {
     @Inject(PLATFORM_ID) private platformId: Object = {}
   ) {}
 
+  // Disable 2FA Modal State
+  showDisable2faModal = false;
+  disable2faCode = '';
+  disabling2fa = false;
+  disable2faError = '';
+
   trigger2faSetupModal(): void {
     if (this.layout) {
       this.layout.open2faSetupModal();
-    } else {
-      this.notification.info('Please click the "Enable 2FA" button in the top navigation bar to setup Google Authenticator.');
     }
+  }
+
+  openDisable2faModal(): void {
+    this.showDisable2faModal = true;
+    this.disable2faCode = '';
+    this.disable2faError = '';
+  }
+
+  closeDisable2faModal(): void {
+    this.showDisable2faModal = false;
+    this.disable2faCode = '';
+    this.disable2faError = '';
+  }
+
+  confirmDisable2fa(): void {
+    if (!this.disable2faCode || this.disable2faCode.trim().length !== 6) {
+      this.disable2faError = 'Please enter a valid 6-digit Google Authenticator code';
+      return;
+    }
+    this.disabling2fa = true;
+    this.disable2faError = '';
+
+    this.enterpriseService.disable2fa(this.disable2faCode.trim()).pipe(
+      finalize(() => {
+        this.disabling2fa = false;
+        this.cdr.markForCheck();
+      })
+    ).subscribe({
+      next: () => {
+        this.showDisable2faModal = false;
+        if (this.profile) {
+          this.profile.mfa_enabled = false;
+          this.profile.is_2fa_enabled = false;
+        }
+        this.notification.success('Google Authenticator (2FA) has been successfully disabled.');
+        this.enterpriseService.getPortalProfile().subscribe();
+      },
+      error: (err) => {
+        this.disable2faError = err.error?.message || 'Invalid 2FA code. Could not disable Google Authenticator.';
+      }
+    });
   }
 
   ngOnInit(): void {

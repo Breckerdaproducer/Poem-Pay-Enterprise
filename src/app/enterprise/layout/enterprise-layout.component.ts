@@ -154,17 +154,6 @@ import { LoaderService } from '../../services/loader.service';
 
           <div class="flex items-center gap-1.5 sm:gap-4 shrink-0">
 
-            <!-- 2FA Security Pill Button -->
-            <button
-              (click)="open2faSetupModal()"
-              class="px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all border flex items-center gap-1.5 cursor-pointer shadow-xs"
-              [ngClass]="(profile?.mfa_enabled || profile?.is_2fa_enabled) ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'"
-              [title]="(profile?.mfa_enabled || profile?.is_2fa_enabled) ? 'Google 2FA Active' : 'Setup Google 2FA Protection'"
-            >
-              <i class="fa-solid" [ngClass]="(profile?.mfa_enabled || profile?.is_2fa_enabled) ? 'fa-shield-halved text-emerald-600' : 'fa-triangle-exclamation text-amber-600 animate-pulse'"></i>
-              <span class="hidden sm:inline">{{ (profile?.mfa_enabled || profile?.is_2fa_enabled) ? '2FA Active' : 'Enable 2FA' }}</span>
-            </button>
-
             <a
               routerLink="/docs"
               class="px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all border flex items-center gap-1.5 sm:gap-2 bg-indigo-50 text-indigo-600 border-indigo-200 hover:bg-indigo-600 hover:text-white shadow-xs"
@@ -210,7 +199,14 @@ import { LoaderService } from '../../services/loader.service';
 
       <!-- Google Authenticator 2FA Security Setup Modal Popup -->
       <div *ngIf="show2faModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-300">
-        <div class="relative w-full max-w-md bg-slate-900 border border-slate-700/80 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 text-white overflow-hidden">
+        <div (click)="dismiss2faModal()" class="absolute inset-0 z-0"></div>
+
+        <div class="relative z-10 w-full max-w-md bg-slate-900 border border-slate-700/80 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 text-white overflow-hidden">
+
+          <!-- Close Button (X) -->
+          <button (click)="dismiss2faModal()" type="button" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition-all cursor-pointer z-20">
+            <i class="fa-solid fa-xmark text-base"></i>
+          </button>
 
           <!-- Glowing Security Glow Background -->
           <div class="absolute -top-24 -right-24 w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
@@ -377,6 +373,9 @@ export class EnterpriseLayoutComponent implements OnInit {
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
+      if (sessionStorage.getItem('poempay_mfa_dismissed') === 'true') {
+        this.mfaDismissed = true;
+      }
       this.currentUser = this.sessionService.getUser();
       this.sessionService.currentUser$.subscribe(user => {
         if (user) {
@@ -466,6 +465,9 @@ export class EnterpriseLayoutComponent implements OnInit {
   dismiss2faModal(): void {
     this.mfaDismissed = true;
     this.show2faModal = false;
+    if (isPlatformBrowser(this.platformId)) {
+      sessionStorage.setItem('poempay_mfa_dismissed', 'true');
+    }
   }
 
   toggleTheme(): void {
