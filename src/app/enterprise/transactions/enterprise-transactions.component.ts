@@ -328,6 +328,9 @@ import { WebsocketService } from '../../services/websocket.service';
         <!-- Backend Pagination Controls Bar -->
         <div *ngIf="totalItems > 0" class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-3 border-t border-slate-100 text-xs text-slate-600 font-medium">
           
+        <!-- Table Pagination Controls Footer -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-3 border-t border-slate-100 text-xs font-semibold text-slate-500">
+          
           <div class="flex items-center gap-3">
             <span>Rows per page:</span>
             <select [(ngModel)]="pageSize" (ngModelChange)="onPageSizeChange()" class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 font-bold text-xs">
@@ -338,8 +341,8 @@ import { WebsocketService } from '../../services/websocket.service';
             </select>
           </div>
 
-          <div class="flex items-center gap-4">
-            <span>Page <strong>{{ currentPage }}</strong> of <strong>{{ totalPages }}</strong> (Total {{ totalItems }} records)</span>
+          <div class="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 w-full sm:w-auto">
+            <span>Page <strong>{{ currentPage }}</strong> of <strong>{{ totalPages }}</strong></span>
             
             <div class="flex items-center gap-1">
               <button 
@@ -363,8 +366,8 @@ import { WebsocketService } from '../../services/websocket.service';
       </div>
 
       <!-- Transaction Telemetry Details Modal -->
-      <div *ngIf="selectedTxn" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-        <div class="w-full max-w-lg bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-7 space-y-5 shadow-2xl text-slate-900">
+      <div *ngIf="selectedTxn" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 z-50 animate-in fade-in duration-200 overflow-y-auto">
+        <div class="w-full max-w-lg bg-white border border-slate-200/80 rounded-3xl p-5 sm:p-7 space-y-5 shadow-2xl text-slate-900 my-auto max-h-[90vh] overflow-y-auto">
           
           <div class="flex items-center justify-between border-b border-slate-100 pb-3.5">
             <div class="flex items-center gap-2.5">

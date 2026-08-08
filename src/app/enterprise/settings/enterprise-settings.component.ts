@@ -15,11 +15,11 @@ import { LoaderService } from '../../services/loader.service';
     <div class="space-y-6 animate-in fade-in duration-500 text-slate-900 font-sans pb-12">
       
       <!-- Top Title Header Bar -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs relative overflow-hidden">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs relative overflow-hidden">
         <div class="space-y-1">
-          <div class="flex items-center gap-2.5">
-            <h2 class="text-xl font-extrabold tracking-tight text-slate-900">Enterprise Settings & Security</h2>
-            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200">
+          <div class="flex items-center gap-2.5 flex-wrap">
+            <h2 class="text-lg sm:text-xl font-extrabold tracking-tight text-slate-900">Enterprise Settings & Security</h2>
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0">
               Admin Portal
             </span>
           </div>
@@ -27,14 +27,14 @@ import { LoaderService } from '../../services/loader.service';
         </div>
 
         <!-- Segmented Tab Switcher -->
-        <div class="flex items-center gap-2 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/80 shrink-0">
+        <div class="flex items-center gap-1 sm:gap-2 bg-slate-100/80 p-1 sm:p-1.5 rounded-2xl border border-slate-200/80 w-full md:w-auto">
           <button
             (click)="activeTab = 'profile'"
             [class.bg-white]="activeTab === 'profile'"
             [class.text-indigo-700]="activeTab === 'profile'"
             [class.shadow-xs]="activeTab === 'profile'"
             [class.text-slate-600]="activeTab !== 'profile'"
-            class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer">
+            class="flex-1 md:flex-initial px-3 sm:px-4 py-2 rounded-xl text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer">
             <i class="fa-solid fa-building-user text-xs"></i>
             <span>Profile & Identity</span>
           </button>
@@ -45,7 +45,7 @@ import { LoaderService } from '../../services/loader.service';
             [class.text-indigo-700]="activeTab === 'security'"
             [class.shadow-xs]="activeTab === 'security'"
             [class.text-slate-600]="activeTab !== 'security'"
-            class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer">
+            class="flex-1 md:flex-initial px-3 sm:px-4 py-2 rounded-xl text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer">
             <i class="fa-solid fa-shield-halved text-xs"></i>
             <span>Security & 2FA OTP</span>
           </button>

@@ -17,49 +17,49 @@ import { WebsocketService } from '../../services/websocket.service';
     <div class="min-h-screen flex flex-col font-sans bg-slate-50 text-slate-900">
       
       <!-- Sticky Top Navigation Header -->
-      <header class="border-b sticky top-0 z-40 bg-white/90 backdrop-blur-md px-4 sm:px-8 py-3.5 flex items-center justify-between border-slate-200/80 shadow-xs">
-        <div class="flex items-center gap-3.5">
-          <button (click)="goBack()" title="Back to API Keys" class="w-9 h-9 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 flex items-center justify-center transition-all text-slate-700 shadow-2xs cursor-pointer">
+      <header class="border-b sticky top-0 z-40 bg-white/90 backdrop-blur-md px-3 sm:px-8 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-slate-200/80 shadow-xs">
+        <div class="flex items-center gap-3 min-w-0">
+          <button (click)="goBack()" title="Back to API Keys" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 flex items-center justify-center transition-all text-slate-700 shadow-2xs cursor-pointer shrink-0">
             <i class="fa-solid fa-arrow-left text-xs"></i>
           </button>
           
-          <div>
-            <div class="flex items-center gap-2">
-              <h1 class="font-extrabold text-base leading-tight text-slate-900 tracking-tight">
+          <div class="min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <h1 class="font-extrabold text-sm sm:text-base leading-tight text-slate-900 tracking-tight truncate">
                 {{ keyDetails?.key?.name || 'API Key Details' }}
               </h1>
               
               <!-- Environment Badge -->
-              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider border inline-flex items-center gap-1.5"
+              <span class="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider border inline-flex items-center gap-1 shrink-0"
                     [ngClass]="keyDetails?.key?.environment === 'LIVE' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'">
                 <span class="w-1.5 h-1.5 rounded-full animate-pulse" [ngClass]="keyDetails?.key?.environment === 'LIVE' ? 'bg-emerald-500' : 'bg-amber-500'"></span>
                 {{ keyDetails?.key?.environment || 'LIVE' }}
               </span>
             </div>
             
-            <p class="text-[11px] font-medium text-slate-500 mt-0.5 flex items-center gap-2">
+            <p class="text-[10px] sm:text-[11px] font-medium text-slate-500 mt-0.5 flex items-center gap-1.5 sm:gap-2 truncate">
               <span>ID: <code class="font-mono font-bold text-slate-700">{{ keyId || 'N/A' }}</code></span>
               <span class="text-slate-300">•</span>
-              <span>Created {{ (keyDetails?.key?.created_at | date:'mediumDate') || 'Recently' }}</span>
+              <span class="truncate">Created {{ (keyDetails?.key?.created_at | date:'mediumDate') || 'Recently' }}</span>
             </p>
           </div>
         </div>
 
         <!-- Header Action Buttons -->
-        <div class="flex items-center gap-2.5">
-          <button (click)="openCreateLinkModal()" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition-all shadow-sm hover:shadow flex items-center gap-2 cursor-pointer">
+        <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap shrink-0">
+          <button (click)="openCreateLinkModal()" class="px-3 sm:px-4 py-1.5 sm:py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer flex-1 sm:flex-initial">
             <i class="fa-solid fa-link text-xs text-indigo-400"></i>
-            <span>Create Payment Link</span>
+            <span>Payment Link</span>
           </button>
 
-          <button (click)="openDepositModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm hover:shadow flex items-center gap-2 cursor-pointer">
+          <button (click)="openDepositModal()" class="px-3 sm:px-4 py-1.5 sm:py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer flex-1 sm:flex-initial">
             <i class="fa-solid fa-circle-plus text-xs"></i>
-            <span>Deposit Top-up</span>
+            <span>Deposit</span>
           </button>
 
-          <button (click)="openWithdrawModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm hover:shadow flex items-center gap-2 cursor-pointer">
+          <button (click)="openWithdrawModal()" class="px-3 sm:px-4 py-1.5 sm:py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer flex-1 sm:flex-initial">
             <i class="fa-solid fa-hand-holding-dollar text-xs"></i>
-            <span>Withdraw Payout</span>
+            <span>Withdraw</span>
           </button>
         </div>
       </header>
@@ -294,7 +294,7 @@ import { WebsocketService } from '../../services/websocket.service';
             </button>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             
             <!-- IP Whitelist Card -->
             <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
@@ -322,19 +322,6 @@ import { WebsocketService } from '../../services/websocket.service';
                 </span>
               </div>
               <p class="text-[11px] text-slate-500">Rate limit window prevents API spam & DDoS</p>
-            </div>
-
-            <!-- Hourly Volume Cap -->
-            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
-              <div class="flex items-center justify-between text-xs font-bold text-slate-700">
-                <span class="flex items-center gap-1.5">
-                  <i class="fa-solid fa-vault text-purple-600"></i> Hourly Volume Cap:
-                </span>
-                <span class="font-mono text-xs font-extrabold text-slate-900">
-                  XAF {{ (keyDetails?.max_hourly_volume_limit || 5000000) | number:'1.0-0' }}
-                </span>
-              </div>
-              <p class="text-[11px] text-slate-500">Anomaly trigger cap on hourly collection volume</p>
             </div>
 
           </div>
@@ -1074,8 +1061,8 @@ import { WebsocketService } from '../../services/websocket.service';
                 <i class="fa-solid fa-shield-halved text-sm"></i>
               </div>
               <div>
-                <h3 class="text-base font-extrabold text-slate-900 leading-tight">Security & Fraud Controls</h3>
-                <p class="text-xs text-slate-500">Configure IP whitelist and velocity rate limits</p>
+                <h3 class="text-base font-extrabold text-slate-900 leading-tight">Security & IP Whitelisting Controls</h3>
+                <p class="text-xs text-slate-500">Configure server IP whitelisting rules</p>
               </div>
             </div>
             
@@ -1102,32 +1089,10 @@ import { WebsocketService } from '../../services/websocket.service';
               <label class="block font-bold uppercase tracking-wider text-slate-600 mb-1.5">Allowed Server IP Addresses (Comma-separated)</label>
               <textarea
                 [(ngModel)]="allowedIpAddressesInput"
-                rows="2"
+                rows="3"
                 placeholder="192.168.1.1, 10.0.0.50, 45.33.18.9"
                 class="w-full px-4 py-2.5 border border-slate-300 rounded-xl font-mono text-xs font-bold text-slate-900 bg-white focus:border-indigo-500 focus:outline-none shadow-xs"
               ></textarea>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="block font-bold uppercase tracking-wider text-slate-600 mb-1.5">Max Velocity (RPM)</label>
-                <input
-                  type="number"
-                  [(ngModel)]="maxRpmLimit"
-                  placeholder="60"
-                  class="w-full px-4 py-2.5 border border-slate-300 rounded-xl font-bold text-slate-900 bg-white focus:border-indigo-500 focus:outline-none shadow-xs"
-                />
-              </div>
-
-              <div>
-                <label class="block font-bold uppercase tracking-wider text-slate-600 mb-1.5">Hourly Cap (XAF)</label>
-                <input
-                  type="number"
-                  [(ngModel)]="maxHourlyVolumeLimit"
-                  placeholder="5000000"
-                  class="w-full px-4 py-2.5 border border-slate-300 rounded-xl font-bold text-slate-900 bg-white focus:border-indigo-500 focus:outline-none shadow-xs"
-                />
-              </div>
             </div>
           </div>
 
@@ -1166,7 +1131,6 @@ export class ApiKeyDetailComponent implements OnInit, OnDestroy {
   isIpWhitelistEnabled = false;
   allowedIpAddressesInput = '';
   maxRpmLimit = 60;
-  maxHourlyVolumeLimit = 5000000;
   securitySaving = false;
 
   // Deposit Top-up Modal State
@@ -1716,7 +1680,6 @@ export class ApiKeyDetailComponent implements OnInit, OnDestroy {
         ? this.keyDetails.allowed_ip_addresses.join(', ')
         : '';
       this.maxRpmLimit = this.keyDetails.max_rpm_limit || 60;
-      this.maxHourlyVolumeLimit = Number(this.keyDetails.max_hourly_volume_limit || 5000000);
     }
     this.showSecurityModal = true;
   }
@@ -1727,14 +1690,12 @@ export class ApiKeyDetailComponent implements OnInit, OnDestroy {
 
     const ips = this.allowedIpAddressesInput
       .split(',')
-      .map(i => i.trim())
-      .filter(i => i.length > 0);
+      .map((i: string) => i.trim())
+      .filter((i: string) => i.length > 0);
 
     this.enterpriseService.updateApiKeySecurity(this.keyId, {
       is_ip_whitelist_enabled: this.isIpWhitelistEnabled,
       allowed_ip_addresses: ips,
-      max_rpm_limit: this.maxRpmLimit,
-      max_hourly_volume_limit: this.maxHourlyVolumeLimit,
     }).subscribe({
       next: (res) => {
         this.securitySaving = false;

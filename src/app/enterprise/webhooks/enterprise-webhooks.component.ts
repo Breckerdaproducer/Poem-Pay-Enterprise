@@ -205,19 +205,19 @@ import { LoaderService } from '../../services/loader.service';
           </div>
 
           <!-- Save and Test Buttons -->
-          <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-slate-100">
             
             <button 
               (click)="sendTestPing()" 
               [disabled]="isTestingPing || !webhookUrl"
-              class="px-4 py-2.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-40">
+              class="px-4 py-2.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40">
               <i class="fa-solid fa-paper-plane text-emerald-600"></i>
               <span>{{ isTestingPing ? 'Sending Ping Test...' : 'Send Test Webhook Ping' }}</span>
             </button>
 
             <button 
               (click)="onSaveWebhook()" 
-              class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-sm flex items-center gap-2 cursor-pointer">
+              class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer">
               <i class="fa-solid fa-floppy-disk"></i>
               <span>Save Webhook Settings</span>
             </button>
@@ -225,14 +225,14 @@ import { LoaderService } from '../../services/loader.service';
           </div>
 
           <!-- Live Ping Test Execution Result Box -->
-          <div *ngIf="pingResult" class="p-4 rounded-2xl bg-slate-900 text-emerald-400 font-mono text-xs space-y-2 border border-slate-800 shadow-inner">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-2 text-[11px]">
+          <div *ngIf="pingResult" class="p-3.5 sm:p-4 rounded-2xl bg-slate-900 text-emerald-400 font-mono text-xs space-y-2 border border-slate-800 shadow-inner overflow-hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800 pb-2 text-[11px] gap-1.5">
               <span class="text-slate-400 font-sans font-bold">Test Webhook Delivery Result:</span>
-              <span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 font-bold border border-emerald-800">
+              <span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 font-bold border border-emerald-800 self-start sm:self-auto">
                 HTTP {{ pingResult.status }} {{ pingResult.statusText }} ({{ pingResult.latencyMs }}ms)
               </span>
             </div>
-            <pre class="overflow-x-auto text-[11px]"><code>{{ pingResult.payload | json }}</code></pre>
+            <pre class="overflow-x-auto text-[11px] max-w-full"><code>{{ pingResult.payload | json }}</code></pre>
           </div>
 
         </div>

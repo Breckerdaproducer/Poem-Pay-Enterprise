@@ -17,114 +17,119 @@ import { WebsocketService } from '../../services/websocket.service';
     <div class="space-y-6 animate-in fade-in duration-500 text-slate-900">
       
       <!-- Top Action Bar -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-xs">
         <div>
-          <h2 class="text-xl font-extrabold tracking-tight text-slate-900">API Key Credentials & Wallets</h2>
+          <h2 class="text-lg sm:text-xl font-extrabold tracking-tight text-slate-900">API Key Credentials & Wallets</h2>
           <p class="text-xs text-slate-500 mt-1">Generate, manage, and cash out funds from your B2B API keys</p>
         </div>
-        <button (click)="showNewKeyModal = true" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-xs flex items-center gap-2">
+        <button (click)="showNewKeyModal = true" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer shrink-0">
           <i class="fa-solid fa-plus text-xs"></i>
           <span>Generate New API Key</span>
         </button>
       </div>
 
       <!-- Secret Key One-Time Alert Banner -->
-      <div *ngIf="newlyCreatedSecretKey" class="p-5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 space-y-2">
-        <div class="flex items-center justify-between">
-          <span class="font-bold text-sm text-emerald-900">🔑 Secret API Key Generated (Copy Immediately!)</span>
-          <button (click)="newlyCreatedSecretKey = null" class="text-xs font-bold hover:underline text-emerald-700">Dismiss</button>
+      <div *ngIf="newlyCreatedSecretKey" class="p-4 sm:p-5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 space-y-2">
+        <div class="flex items-center justify-between gap-2">
+          <span class="font-bold text-xs sm:text-sm text-emerald-900">🔑 Secret API Key Generated (Copy Immediately!)</span>
+          <button (click)="newlyCreatedSecretKey = null" class="text-xs font-bold hover:underline text-emerald-700 cursor-pointer shrink-0">Dismiss</button>
         </div>
-        <p class="text-xs text-emerald-700">For security reasons, this secret key will never be shown again. Copy and store it securely in your backend environment configuration.</p>
-        <div class="p-3 bg-slate-900 rounded-xl border border-slate-800 font-mono text-xs text-emerald-400 flex items-center justify-between shadow-inner">
-          <span>{{ newlyCreatedSecretKey }}</span>
+        <p class="text-xs text-emerald-700 leading-relaxed">For security reasons, this secret key will never be shown again. Copy and store it securely in your backend environment configuration.</p>
+        <div class="p-3 bg-slate-900 rounded-xl border border-slate-800 font-mono text-xs text-emerald-400 flex items-center justify-between gap-2 shadow-inner overflow-x-auto">
+          <span class="select-all break-all">{{ newlyCreatedSecretKey }}</span>
+          <button (click)="copyToClipboard(newlyCreatedSecretKey)" class="px-2 py-1 rounded bg-emerald-900 hover:bg-emerald-800 text-emerald-200 text-[11px] font-sans font-bold flex items-center gap-1 shrink-0 cursor-pointer">
+            <i class="fa-regular fa-copy"></i> Copy
+          </button>
         </div>
       </div>
 
       <!-- API Keys Table Card -->
-      <div class="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs overflow-x-auto">
-        <table class="w-full text-left text-xs border-collapse">
-          <thead>
-            <tr class="border-b border-slate-200 bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-500">
-              <th class="py-3 px-4">Key Label & Website</th>
-              <th class="py-3 px-4">Secret API Key</th>
-              <th class="py-3 px-4">Public Key</th>
-              <th class="py-3 px-4">Environment</th>
-              <th class="py-3 px-4">Status</th>
-              <th class="py-3 px-4">Created Date</th>
-              <th class="py-3 px-4 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100 text-slate-900">
-            <tr *ngFor="let key of apiKeys" class="hover:bg-slate-50 transition-colors">
-              <td class="py-3.5 px-4">
-                <div (click)="viewKeyOverview(key.id)" class="font-bold cursor-pointer text-indigo-600 hover:underline flex items-center gap-1.5">
-                  <span>{{ key.name }}</span>
-                  <i class="fa-solid fa-arrow-up-right-from-square text-[10px] opacity-70"></i>
-                </div>
-                <p class="text-[11px] font-mono text-slate-400 mt-0.5">
-                  <i class="fa-solid fa-globe text-[10px] mr-1"></i>{{ key.website_url || 'No website provided' }}
-                </p>
-              </td>
-              <td class="py-3.5 px-4 font-mono text-indigo-700 font-bold">
-                <div class="flex items-center gap-2">
-                  <span>{{ getMaskedKey(key) }}</span>
-                  <button (click)="copyToClipboard(key.secret_key, $event)" 
-                          title="Copy Secret API Key (sk_ent_...)"
-                          class="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-indigo-600 transition-colors text-[11px] flex items-center gap-1 font-sans font-semibold border border-slate-200">
-                    <i class="fa-solid fa-copy text-[10px]"></i>
-                    <span>Copy Secret</span>
-                  </button>
-                </div>
-              </td>
-              <td class="py-3.5 px-4 font-mono text-slate-600">
-                <div class="flex items-center gap-1.5">
-                  <span>{{ key.public_key }}</span>
-                  <button (click)="copyToClipboard(key.public_key, $event)"
-                          title="Copy Public Key (pk_ent_...)"
-                          class="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-700 transition-colors text-[10px] flex items-center gap-1 font-sans border border-slate-200">
-                    <i class="fa-solid fa-copy text-[9px]"></i>
-                  </button>
-                </div>
-              </td>
-              <td class="py-3.5 px-4">
-                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border" 
-                      [ngClass]="key.environment === 'LIVE' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'">
-                  {{ key.environment }}
-                </span>
-              </td>
-              <td class="py-3.5 px-4">
-                <span [ngClass]="key.is_active ? 'text-emerald-600 font-bold' : 'text-red-500 font-bold'">
-                  {{ key.is_active ? '● Active' : '○ Revoked' }}
-                </span>
-              </td>
-              <td class="py-3.5 px-4 text-slate-500">{{ key.created_at | date:'mediumDate' }}</td>
-              <td class="py-3.5 px-4 text-right">
-                <div class="flex items-center justify-end gap-3">
-                  <button (click)="viewKeyOverview(key.id)" class="text-indigo-600 hover:text-indigo-800 font-bold hover:underline">
-                    Wallet & Overview →
-                  </button>
-                  <button *ngIf="key.is_active" (click)="onRevokeKey(key.id, $event)" class="text-amber-600 hover:text-amber-700 text-xs font-bold hover:underline">
-                    Revoke
-                  </button>
-                  <button (click)="onDeleteKey(key.id, $event)" class="text-red-600 hover:text-red-700 text-xs font-bold hover:underline flex items-center gap-1">
-                    <i class="fa-solid fa-trash-can"></i> Delete
-                  </button>
-                </div>
-              </td>
-            </tr>
-            <tr *ngIf="apiKeys.length === 0">
-              <td colspan="6" class="py-8 text-center text-slate-400">No API Keys generated yet. Click "+ Generate New API Key" above.</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="p-4 sm:p-6 rounded-2xl bg-white border border-slate-200 shadow-xs">
+        <div class="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="border-b border-slate-200 bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                <th class="py-3 px-4 whitespace-nowrap">Key Label & Website</th>
+                <th class="py-3 px-4 whitespace-nowrap">Secret API Key</th>
+                <th class="py-3 px-4 whitespace-nowrap">Public Key</th>
+                <th class="py-3 px-4 whitespace-nowrap">Environment</th>
+                <th class="py-3 px-4 whitespace-nowrap">Status</th>
+                <th class="py-3 px-4 whitespace-nowrap">Created Date</th>
+                <th class="py-3 px-4 text-right whitespace-nowrap">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-slate-900">
+              <tr *ngFor="let key of apiKeys" class="hover:bg-slate-50 transition-colors">
+                <td class="py-3.5 px-4 whitespace-nowrap">
+                  <div (click)="viewKeyOverview(key.id)" class="font-bold cursor-pointer text-indigo-600 hover:underline flex items-center gap-1.5">
+                    <span>{{ key.name }}</span>
+                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px] opacity-70"></i>
+                  </div>
+                  <p class="text-[11px] font-mono text-slate-400 mt-0.5">
+                    <i class="fa-solid fa-globe text-[10px] mr-1"></i>{{ key.website_url || 'No website provided' }}
+                  </p>
+                </td>
+                <td class="py-3.5 px-4 font-mono text-indigo-700 font-bold whitespace-nowrap">
+                  <div class="flex items-center gap-2">
+                    <span>{{ getMaskedKey(key) }}</span>
+                    <button (click)="copyToClipboard(key.secret_key, $event)" 
+                            title="Copy Secret API Key (sk_ent_...)"
+                            class="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-indigo-600 transition-colors text-[11px] flex items-center gap-1 font-sans font-semibold border border-slate-200 cursor-pointer">
+                      <i class="fa-solid fa-copy text-[10px]"></i>
+                      <span>Copy Secret</span>
+                    </button>
+                  </div>
+                </td>
+                <td class="py-3.5 px-4 font-mono text-slate-600 whitespace-nowrap">
+                  <div class="flex items-center gap-1.5">
+                    <span>{{ key.public_key }}</span>
+                    <button (click)="copyToClipboard(key.public_key, $event)"
+                            title="Copy Public Key (pk_ent_...)"
+                            class="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-700 transition-colors text-[10px] flex items-center gap-1 font-sans border border-slate-200 cursor-pointer">
+                      <i class="fa-solid fa-copy text-[9px]"></i>
+                    </button>
+                  </div>
+                </td>
+                <td class="py-3.5 px-4 whitespace-nowrap">
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border inline-block" 
+                        [ngClass]="key.environment === 'LIVE' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'">
+                    {{ key.environment }}
+                  </span>
+                </td>
+                <td class="py-3.5 px-4 whitespace-nowrap">
+                  <span [ngClass]="key.is_active ? 'text-emerald-600 font-bold' : 'text-red-500 font-bold'">
+                    {{ key.is_active ? '● Active' : '○ Revoked' }}
+                  </span>
+                </td>
+                <td class="py-3.5 px-4 text-slate-500 whitespace-nowrap">{{ key.created_at | date:'mediumDate' }}</td>
+                <td class="py-3.5 px-4 text-right whitespace-nowrap">
+                  <div class="flex items-center justify-end gap-2.5 sm:gap-3 flex-wrap">
+                    <button (click)="viewKeyOverview(key.id)" class="text-indigo-600 hover:text-indigo-800 font-bold hover:underline cursor-pointer">
+                      Wallet & Overview →
+                    </button>
+                    <button *ngIf="key.is_active" (click)="onRevokeKey(key.id, $event)" class="text-amber-600 hover:text-amber-700 text-xs font-bold hover:underline cursor-pointer">
+                      Revoke
+                    </button>
+                    <button (click)="onDeleteKey(key.id, $event)" class="text-red-600 hover:text-red-700 text-xs font-bold hover:underline flex items-center gap-1 cursor-pointer">
+                      <i class="fa-solid fa-trash-can"></i> Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <tr *ngIf="apiKeys.length === 0">
+                <td colspan="7" class="py-8 text-center text-slate-400">No API Keys generated yet. Click "+ Generate New API Key" above.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <!-- Generate API Key Modal -->
-      <div *ngIf="showNewKeyModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-        <div class="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 space-y-5 shadow-2xl text-slate-900">
+      <div *ngIf="showNewKeyModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">
+        <div class="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 space-y-5 shadow-2xl text-slate-900 my-auto max-h-[90vh] overflow-y-auto">
           <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h3 class="text-lg font-extrabold text-slate-900">Generate New API Key</h3>
-            <button (click)="showNewKeyModal = false" class="text-slate-400 hover:text-slate-600 text-sm">
+            <h3 class="text-base sm:text-lg font-extrabold text-slate-900">Generate New API Key</h3>
+            <button (click)="showNewKeyModal = false" class="text-slate-400 hover:text-slate-600 text-sm cursor-pointer">
               <i class="fa-solid fa-xmark"></i>
             </button>
           </div>
@@ -147,8 +152,8 @@ import { WebsocketService } from '../../services/websocket.service';
           </div>
 
           <div class="flex justify-end gap-3 pt-2 border-t border-slate-100">
-            <button (click)="showNewKeyModal = false" class="px-4 py-2 border border-slate-200 rounded-xl text-xs font-bold bg-slate-50 text-slate-700 hover:bg-slate-100">Cancel</button>
-            <button (click)="onCreateKey()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs">Generate Key</button>
+            <button (click)="showNewKeyModal = false" class="px-4 py-2 border border-slate-200 rounded-xl text-xs font-bold bg-slate-50 text-slate-700 hover:bg-slate-100 cursor-pointer">Cancel</button>
+            <button (click)="onCreateKey()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs cursor-pointer">Generate Key</button>
           </div>
         </div>
       </div>

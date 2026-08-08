@@ -75,50 +75,50 @@ interface SandboxResult {
       </div>
 
       <!-- Quick Integration Steps (6 Cards Grid) -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3.5">
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-3.5">
 
-        <div class="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-1.5 hover:-translate-y-1 transition-all duration-300">
-          <div class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-100 flex items-center justify-center font-extrabold text-xs shadow-xs">1</div>
+        <div class="p-3 sm:p-3.5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-1.5 hover:-translate-y-1 transition-all duration-300">
+          <div class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-100 flex items-center justify-center font-extrabold text-xs shadow-xs">1</div>
           <h4 class="font-bold text-xs text-slate-900">1. Credentials</h4>
           <p class="text-[10px] text-slate-500 leading-relaxed">
             Pass <code class="text-indigo-600 font-mono font-bold bg-indigo-50/60 px-1 py-0.5 rounded">sk_ent_live_...</code> in headers.
           </p>
         </div>
 
-        <div class="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-1.5 hover:-translate-y-1 transition-all duration-300">
-          <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center font-extrabold text-xs shadow-xs">2</div>
+        <div class="p-3 sm:p-3.5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-1.5 hover:-translate-y-1 transition-all duration-300">
+          <div class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center font-extrabold text-xs shadow-xs">2</div>
           <h4 class="font-bold text-xs text-slate-900">2. Deposit Top-up</h4>
           <p class="text-[10px] text-slate-500 leading-relaxed">
             Deposit funds to API Key wallet.
           </p>
         </div>
 
-        <div class="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-1.5 hover:-translate-y-1 transition-all duration-300">
-          <div class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-100 flex items-center justify-center font-extrabold text-xs shadow-xs">3</div>
+        <div class="p-3 sm:p-3.5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-1.5 hover:-translate-y-1 transition-all duration-300">
+          <div class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-100 flex items-center justify-center font-extrabold text-xs shadow-xs">3</div>
           <h4 class="font-bold text-xs text-slate-900">3. Status Check</h4>
           <p class="text-[10px] text-slate-500 leading-relaxed">
             Verify transaction status.
           </p>
         </div>
 
-        <div class="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-1.5 hover:-translate-y-1 transition-all duration-300">
-          <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-700 border border-amber-100 flex items-center justify-center font-extrabold text-xs shadow-xs">4</div>
+        <div class="p-3 sm:p-3.5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-1.5 hover:-translate-y-1 transition-all duration-300">
+          <div class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-amber-50 text-amber-700 border border-amber-100 flex items-center justify-center font-extrabold text-xs shadow-xs">4</div>
           <h4 class="font-bold text-xs text-slate-900">4. Withdraw Payout</h4>
           <p class="text-[10px] text-slate-500 leading-relaxed">
             Disburse Mobile Money cashouts.
           </p>
         </div>
 
-        <div class="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-1.5 hover:-translate-y-1 transition-all duration-300">
-          <div class="w-7 h-7 rounded-lg bg-blue-50 text-blue-700 border border-blue-100 flex items-center justify-center font-extrabold text-xs shadow-xs">5</div>
+        <div class="p-3 sm:p-3.5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-1.5 hover:-translate-y-1 transition-all duration-300">
+          <div class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-blue-50 text-blue-700 border border-blue-100 flex items-center justify-center font-extrabold text-xs shadow-xs">5</div>
           <h4 class="font-bold text-xs text-slate-900">5. Webhooks</h4>
           <p class="text-[10px] text-slate-500 leading-relaxed">
             Instant HTTP push callbacks.
           </p>
         </div>
 
-        <div class="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-1.5 hover:-translate-y-1 transition-all duration-300">
-          <div class="w-7 h-7 rounded-lg bg-purple-50 text-purple-700 border border-purple-100 flex items-center justify-center font-extrabold text-xs shadow-xs">6</div>
+        <div class="p-3 sm:p-3.5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-1.5 hover:-translate-y-1 transition-all duration-300">
+          <div class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-purple-50 text-purple-700 border border-purple-100 flex items-center justify-center font-extrabold text-xs shadow-xs">6</div>
           <h4 class="font-bold text-xs text-slate-900">6. Holder Name</h4>
           <p class="text-[10px] text-slate-500 leading-relaxed">
             Lookup customer profile name.
@@ -128,22 +128,22 @@ interface SandboxResult {
       </div>
 
       <!-- Authentication Header Specification Card -->
-      <div class="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4">
+      <div class="p-4 sm:p-6 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+          <h3 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
             <i class="fa-solid fa-shield-halved text-indigo-600"></i>
             <span>Authentication Header Specification</span>
           </h3>
-          <span class="text-[11px] font-mono font-bold px-3 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0">Header: x-api-key</span>
+          <span class="text-[11px] font-mono font-bold px-3 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0 self-start sm:self-auto">Header: x-api-key</span>
         </div>
 
         <p class="text-xs text-slate-600 leading-relaxed">
           All B2B integration requests require your Secret API Key (<code class="px-1.5 py-0.5 rounded bg-slate-100 text-indigo-700 font-mono text-[11px] font-bold">sk_ent_live_example</code>) in the <code class="px-1.5 py-0.5 rounded bg-slate-100 text-indigo-700 font-mono text-[11px] font-bold">x-api-key</code> HTTP header:
         </p>
 
-        <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 font-mono text-xs text-emerald-400 flex items-center justify-between overflow-x-auto shadow-inner">
-          <span>x-api-key: {{ sandboxApiKey }}</span>
-          <button (click)="copyText('x-api-key: ' + sandboxApiKey)" class="text-slate-400 hover:text-white transition-colors text-xs font-sans flex items-center gap-1.5 font-bold cursor-pointer">
+        <div class="p-3.5 sm:p-4 rounded-xl bg-slate-900 border border-slate-800 font-mono text-xs text-emerald-400 flex items-center justify-between gap-2 overflow-x-auto shadow-inner">
+          <span class="select-all break-all">{{ 'x-api-key: ' + sandboxApiKey }}</span>
+          <button (click)="copyText('x-api-key: ' + sandboxApiKey)" class="text-slate-400 hover:text-white transition-colors text-xs font-sans flex items-center gap-1.5 font-bold cursor-pointer shrink-0">
             <i class="fa-regular fa-copy"></i>
             <span>{{ copiedKey ? 'Copied Header!' : 'Copy Header' }}</span>
           </button>
@@ -154,7 +154,7 @@ interface SandboxResult {
       <div class="flex flex-col lg:flex-row gap-6 items-start">
 
         <!-- Sidebar Navigation (Left Side) -->
-        <aside class="w-full lg:w-80 shrink-0 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
+        <aside class="w-full lg:w-80 shrink-0 bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm space-y-4">
           
           <div class="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-500 flex items-center gap-2">
@@ -175,13 +175,13 @@ interface SandboxResult {
               placeholder="Search endpoints..." 
               class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 transition-colors"
             />
-            <button *ngIf="sidebarSearch" (click)="sidebarSearch = ''" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-700 text-xs">
+            <button *ngIf="sidebarSearch" (click)="sidebarSearch = ''" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-700 text-xs cursor-pointer">
               <i class="fa-solid fa-xmark"></i>
             </button>
           </div>
 
           <!-- Vertical Endpoint Nav List -->
-          <nav class="space-y-2">
+          <nav class="space-y-2 max-h-80 lg:max-h-none overflow-y-auto pr-0.5">
             <button
               *ngFor="let ep of getFilteredEndpoints()"
               (click)="onSelectEndpoint(ep.id)"
@@ -227,24 +227,24 @@ interface SandboxResult {
         </aside>
 
         <!-- Main Content Area (Right Side) -->
-        <main class="flex-1 w-full bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm space-y-6">
+        <main class="flex-1 w-full bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 lg:p-8 shadow-sm space-y-6">
 
           <!-- Active Endpoint Title & URL Bar -->
           <div class="space-y-4 border-b border-slate-200 pb-5">
-            <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div class="flex items-center gap-2.5">
                 <span 
                   class="px-2.5 py-1 rounded-lg text-xs font-mono font-extrabold uppercase tracking-wider"
                   [ngClass]="activeEndpoint.badgeClass">
                   {{ activeEndpoint.method }}
                 </span>
-                <h3 class="text-xl font-extrabold text-slate-900">
+                <h3 class="text-lg sm:text-xl font-extrabold text-slate-900">
                   {{ activeEndpoint.name }}
                 </h3>
               </div>
 
               <!-- Programming Language Selector (Including Java) -->
-              <div class="flex flex-wrap items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
+              <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 overflow-x-auto max-w-full no-scrollbar">
                 <button
                   *ngFor="let lang of ['curl', 'javascript', 'node', 'python', 'php', 'go', 'java']"
                   (click)="selectedLang = lang"
@@ -252,7 +252,7 @@ interface SandboxResult {
                     'bg-white text-indigo-700 shadow-xs border-slate-200': selectedLang === lang,
                     'text-slate-600 hover:text-slate-900 border-transparent': selectedLang !== lang
                   }"
-                  class="px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase transition-all border cursor-pointer">
+                  class="px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase transition-all border cursor-pointer whitespace-nowrap">
                   {{ lang }}
                 </button>
               </div>

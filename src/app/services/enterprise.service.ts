@@ -414,7 +414,7 @@ export class EnterpriseService {
     );
   }
 
-  updateApiKeySecurity(id: string, data: { allowed_ip_addresses?: string[]; is_ip_whitelist_enabled?: boolean; max_rpm_limit?: number; max_hourly_volume_limit?: number }): Observable<any> {
+  updateApiKeySecurity(id: string, data: { allowed_ip_addresses?: string[]; is_ip_whitelist_enabled?: boolean; max_rpm_limit?: number }): Observable<any> {
     return this.http.patch<any>(`${this.baseUrl}/v1/enterprise/portal/api-keys/${id}/security`, data, {
       withCredentials: true,
     }).pipe(

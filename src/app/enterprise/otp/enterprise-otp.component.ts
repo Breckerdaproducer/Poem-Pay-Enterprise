@@ -67,12 +67,12 @@ import { LoaderService } from '../../services/loader.service';
       </div>
 
       <!-- RIGHT PANEL (OTP Input Form) -->
-      <div class="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12">
+      <div class="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-8 lg:p-12">
         <div class="w-full max-w-md">
           
           <div class="mb-8 text-center lg:text-left">
-            <h2 class="text-3xl font-bold mb-2" style="color: var(--text-primary)">Enterprise 2FA</h2>
-            <p style="color: var(--text-secondary)">
+            <h2 class="text-2xl sm:text-3xl font-bold mb-2" style="color: var(--text-primary)">Enterprise 2FA</h2>
+            <p class="text-xs sm:text-sm" style="color: var(--text-secondary)">
               Enter the 6-digit verification code sent to your email
             </p>
           </div>
@@ -91,10 +91,10 @@ import { LoaderService } from '../../services/loader.service';
                 autofocus
               />
 
-              <div class="grid grid-cols-6 gap-2 sm:gap-3 h-full pointer-events-none">
+              <div class="grid grid-cols-6 gap-1.5 sm:gap-3 h-full pointer-events-none">
                 <div
                   *ngFor="let i of [0,1,2,3,4,5]"
-                  class="otp-box flex items-center justify-center border-2 rounded-xl text-xl sm:text-2xl font-black transition-all"
+                  class="otp-box flex items-center justify-center border-2 rounded-lg sm:rounded-xl text-lg sm:text-2xl font-black transition-all"
                   [class.active]="otpValue.length === i"
                   [class.filled]="otpValue.length > i"
                   style="background: var(--bg-input); border-color: var(--border); color: var(--text-primary)"
@@ -108,17 +108,17 @@ import { LoaderService } from '../../services/loader.service';
             <button
               type="submit"
               [disabled]="otpValue.length !== 6"
-              class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 flex items-center justify-center text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-600/20 hover:shadow-indigo-600/30 transition-all transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50"
+              class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 flex items-center justify-center text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-600/20 hover:shadow-indigo-600/30 transition-all transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 cursor-pointer"
             >
               Verify OTP & Continue
             </button>
           </form>
 
-          <div class="mt-8 flex items-center justify-between text-xs" style="color: var(--text-muted)">
-            <button (click)="goBack()" class="hover:text-indigo-500 transition-colors font-medium">
+          <div class="mt-8 flex items-center justify-between text-xs gap-2" style="color: var(--text-muted)">
+            <button (click)="goBack()" class="hover:text-indigo-500 transition-colors font-medium cursor-pointer">
               ← Back to Login
             </button>
-            <button (click)="resendOtp()" class="text-indigo-500 hover:underline font-bold">
+            <button (click)="resendOtp()" class="text-indigo-500 hover:underline font-bold cursor-pointer">
               Resend OTP Email
             </button>
           </div>
@@ -131,7 +131,12 @@ import { LoaderService } from '../../services/loader.service';
   styles: [`
     .otp-wrapper {
       width: 100%;
-      height: 4rem;
+      height: 3.5rem;
+    }
+    @media (min-width: 640px) {
+      .otp-wrapper {
+        height: 4rem;
+      }
     }
     .otp-input-actual {
       position: absolute;
