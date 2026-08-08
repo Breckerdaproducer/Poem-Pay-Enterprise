@@ -74,6 +74,71 @@ import { LoaderService } from '../../services/loader.service';
 
         <form (ngSubmit)="onSaveProfile()" class="p-6 sm:p-8 space-y-6">
           
+          <!-- Enterprise Profile Avatar / Logo Card -->
+          <div class="p-6 rounded-3xl border border-slate-200/80 bg-slate-50/70 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              
+              <div class="flex items-center gap-5">
+                <!-- Avatar Preview Circle -->
+                <div class="relative group shrink-0">
+                  <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br from-indigo-500 via-indigo-600 to-violet-700 flex items-center justify-center font-black text-white text-xl sm:text-2xl shadow-lg shadow-indigo-500/25 overflow-hidden border-2 border-white ring-4 ring-indigo-50 font-sans">
+                    <img *ngIf="getAvatarUrl() && !avatarFailed" [src]="getAvatarUrl()" (error)="avatarFailed = true" alt="Enterprise Avatar" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+                    <span *ngIf="!getAvatarUrl() || avatarFailed">{{ getUserInitials() }}</span>
+                  </div>
+
+                  <!-- Uploading Overlay Spinner -->
+                  <div *ngIf="uploadingAvatar" class="absolute inset-0 bg-slate-900/70 rounded-2xl flex flex-col items-center justify-center text-white backdrop-blur-xs">
+                    <i class="fa-solid fa-circle-notch animate-spin text-xl text-indigo-400"></i>
+                    <span class="text-[9px] font-bold mt-1">Uploading...</span>
+                  </div>
+                </div>
+
+                <div class="space-y-1">
+                  <h4 class="text-xs sm:text-sm font-extrabold text-slate-900">Profile Avatar & Company Logo</h4>
+                  <p class="text-[11px] text-slate-500 leading-relaxed max-w-md">
+                    Upload your enterprise logo or profile picture to customize your portal interface and client payment links.
+                  </p>
+                  <div class="flex items-center gap-2 pt-1">
+                    <span class="px-2 py-0.5 rounded-md bg-slate-200/60 text-slate-700 text-[10px] font-bold uppercase">PNG, JPG, WEBP, GIF</span>
+                    <span class="px-2 py-0.5 rounded-md bg-slate-200/60 text-slate-700 text-[10px] font-bold">Max 10MB</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Avatar Actions -->
+              <div class="flex items-center gap-2.5 self-start sm:self-center">
+                <input
+                  type="file"
+                  #fileInput
+                  (change)="onFileSelected($event)"
+                  accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
+                  class="hidden"
+                />
+                <button
+                  type="button"
+                  (click)="fileInput.click()"
+                  [disabled]="uploadingAvatar"
+                  class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer">
+                  <i *ngIf="uploadingAvatar" class="fa-solid fa-circle-notch animate-spin text-xs"></i>
+                  <i *ngIf="!uploadingAvatar" class="fa-solid fa-camera text-xs"></i>
+                  <span>{{ getAvatarUrl() ? 'Change Avatar' : 'Upload Avatar' }}</span>
+                </button>
+
+                <button
+                  *ngIf="getAvatarUrl()"
+                  type="button"
+                  (click)="onRemoveAvatar()"
+                  [disabled]="uploadingAvatar"
+                  class="px-3 py-2.5 bg-slate-100 hover:bg-red-50 hover:text-red-600 text-slate-600 disabled:opacity-50 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+                  title="Remove avatar image">
+                  <i class="fa-solid fa-trash-can text-xs"></i>
+                  <span class="hidden sm:inline">Remove</span>
+                </button>
+              </div>
+
+            </div>
+          </div>
+
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             
             <!-- Enterprise Name -->
@@ -375,6 +440,8 @@ export class EnterpriseSettingsComponent implements OnInit {
   };
 
   savingProfile = false;
+  uploadingAvatar = false;
+  avatarFailed = false;
   sendingOtp = false;
   changingPassword = false;
 
@@ -398,6 +465,13 @@ export class EnterpriseSettingsComponent implements OnInit {
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
       this.currentUser = this.sessionService.getUser();
+      this.sessionService.currentUser$.subscribe(user => {
+        if (user) {
+          this.currentUser = user;
+          this.avatarFailed = false;
+          this.cdr.markForCheck();
+        }
+      });
       this.enterpriseService.enterprise$.subscribe(data => {
         if (data) {
           this.profile = data;
@@ -409,6 +483,105 @@ export class EnterpriseSettingsComponent implements OnInit {
       });
       this.loadProfile();
     }
+  }
+
+  getAvatarUrl(): string {
+    const raw = this.currentUser?.avatar_url || this.profile?.logo_url || this.profile?.avatar_url || (this.profile?.user as any)?.avatar_url;
+    return this.sessionService.resolveImageUrl(raw);
+  }
+
+  getUserInitials(): string {
+    const name = this.profileForm.name || this.currentUser?.name || this.profile?.name || 'Enterprise Admin';
+    return name
+      .split(' ')
+      .filter(Boolean)
+      .map((n: string) => n[0])
+      .join('')
+      .substring(0, 2)
+      .toUpperCase() || 'EA';
+  }
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+
+    const file = input.files[0];
+    if (file.size > 10 * 1024 * 1024) {
+      this.notification.showError('File size exceeds 10MB limit. Please select a smaller image.');
+      return;
+    }
+
+    this.uploadingAvatar = true;
+    this.loader.show();
+
+    this.enterpriseService.uploadAvatar(file)
+      .pipe(finalize(() => {
+        this.uploadingAvatar = false;
+        this.loader.hide();
+        this.cdr.markForCheck();
+      }))
+      .subscribe({
+        next: (res) => {
+          this.avatarFailed = false;
+          const newUrl = res?.avatar_url || res?.logo_url;
+          if (newUrl) {
+            if (this.profile) {
+              this.profile.logo_url = newUrl;
+              this.profile.avatar_url = newUrl;
+            }
+            this.sessionService.saveUser(
+              this.currentUser?.email || this.profileForm.email,
+              this.currentUser?.name || this.profileForm.name,
+              this.currentUser?.role,
+              this.currentUser?.user_id,
+              newUrl
+            );
+          }
+          this.notification.showSuccess(res?.message || 'Profile avatar uploaded successfully!');
+          input.value = '';
+        },
+        error: (err) => {
+          console.error('Failed to upload avatar:', err);
+          this.notification.showError(err?.error?.message || 'Failed to upload profile avatar.');
+          input.value = '';
+        }
+      });
+  }
+
+  onRemoveAvatar(): void {
+    this.uploadingAvatar = true;
+    this.loader.show();
+
+    this.enterpriseService.updatePortalProfile({
+      logo_url: '',
+      avatar_url: ''
+    })
+    .pipe(finalize(() => {
+      this.uploadingAvatar = false;
+      this.loader.hide();
+      this.cdr.markForCheck();
+    }))
+    .subscribe({
+      next: (res) => {
+        this.avatarFailed = false;
+        if (this.profile) {
+          this.profile.logo_url = '';
+          this.profile.avatar_url = '';
+        }
+        this.sessionService.saveUser(
+          this.currentUser?.email || this.profileForm.email,
+          this.currentUser?.name || this.profileForm.name,
+          this.currentUser?.role,
+          this.currentUser?.user_id,
+          ''
+        );
+        this.notification.showSuccess('Profile avatar removed successfully.');
+      },
+      error: (err) => {
+        console.error('Failed to remove avatar:', err);
+        this.notification.showError(err?.error?.message || 'Failed to remove profile avatar.');
+      }
+    });
   }
 
   loadProfile(): void {

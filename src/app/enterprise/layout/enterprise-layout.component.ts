@@ -164,8 +164,9 @@ import { LoaderService } from '../../services/loader.service';
 
             <!-- User Profile Pill -->
             <div class="flex items-center gap-1.5 sm:gap-3 pl-1.5 sm:pl-2 border-l" style="border-color: var(--border)">
-              <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center font-bold text-white text-xs sm:text-sm shadow-md shadow-indigo-500/20 shrink-0">
-                {{ getUserInitials() }}
+              <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center font-bold text-white text-xs sm:text-sm shadow-md shadow-indigo-500/20 shrink-0 relative overflow-hidden border border-indigo-300/30">
+                <img *ngIf="getAvatarUrl() && !avatarFailed" [src]="getAvatarUrl()" (error)="avatarFailed = true" alt="Profile Avatar" class="w-full h-full object-cover">
+                <span *ngIf="!getAvatarUrl() || avatarFailed">{{ getUserInitials() }}</span>
               </div>
               <div class="hidden sm:flex flex-col min-w-0">
                 <p class="user-name-top text-sm font-bold leading-none truncate" style="color: var(--text-primary)">
@@ -236,6 +237,7 @@ export class EnterpriseLayoutComponent implements OnInit {
   profile: Enterprise | null = null;
   currentUser: any = null;
   logoFailed = false;
+  avatarFailed = false;
 
   menuItems = [
     { label: 'Overview & Telemetry', route: '/dashboard', icon: 'fa-solid fa-chart-pie' },
@@ -260,6 +262,13 @@ export class EnterpriseLayoutComponent implements OnInit {
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
       this.currentUser = this.sessionService.getUser();
+      this.sessionService.currentUser$.subscribe(user => {
+        if (user) {
+          this.currentUser = user;
+          this.avatarFailed = false;
+          this.cdr.markForCheck();
+        }
+      });
       this.enterpriseService.enterprise$.subscribe(profile => {
         if (profile) {
           this.profile = profile;
@@ -282,6 +291,11 @@ export class EnterpriseLayoutComponent implements OnInit {
     } else {
       this.document.documentElement.classList.add('dark');
     }
+  }
+
+  getAvatarUrl(): string {
+    const raw = this.currentUser?.avatar_url || this.profile?.logo_url || this.profile?.avatar_url || (this.profile?.user as any)?.avatar_url;
+    return this.sessionService.resolveImageUrl(raw);
   }
 
   getUserInitials(): string {

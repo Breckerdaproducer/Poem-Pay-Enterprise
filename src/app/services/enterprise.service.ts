@@ -9,12 +9,15 @@ export interface Enterprise {
   name: string;
   email: string;
   phone?: string;
+  logo_url?: string;
+  avatar_url?: string;
   status: 'ACTIVE' | 'SUSPENDED' | 'PENDING';
   environment: 'TEST' | 'LIVE';
   webhook_url?: string;
   webhook_secret?: string;
   custom_fee_percentage: number;
   created_at: string;
+  user?: any;
 }
 
 export interface EnterpriseApiKey {
@@ -491,7 +494,7 @@ export class EnterpriseService {
     );
   }
 
-  updatePortalProfile(data: { name?: string; email?: string; phone?: string }): Observable<any> {
+  updatePortalProfile(data: { name?: string; email?: string; phone?: string; logo_url?: string; avatar_url?: string }): Observable<any> {
     return this.http.patch<any>(
       `${this.baseUrl}/v1/enterprise/portal/profile`,
       data,
@@ -502,6 +505,33 @@ export class EnterpriseService {
           this.enterpriseSubject.next(res.enterprise);
         } else {
           this.getPortalProfile().subscribe();
+        }
+      })
+    );
+  }
+
+  uploadAvatar(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return this.http.post<any>(
+      `${this.baseUrl}/v1/enterprise/portal/avatar`,
+      formData,
+      { withCredentials: true }
+    ).pipe(
+      tap(res => {
+        if (res && res.enterprise) {
+          this.enterpriseSubject.next(res.enterprise);
+        } else if (res && (res.avatar_url || res.logo_url)) {
+          const newUrl = res.avatar_url || res.logo_url;
+          const current = this.enterpriseSubject.getValue();
+          if (current) {
+            this.enterpriseSubject.next({
+              ...current,
+              logo_url: newUrl,
+              avatar_url: newUrl
+            });
+          }
         }
       })
     );

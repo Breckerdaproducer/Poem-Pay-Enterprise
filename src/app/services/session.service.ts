@@ -135,7 +135,8 @@ export class SessionService {
         if (ent && (ent.email || ent.id)) {
           const name = ent.name || ent.email;
           const role = 'ENTERPRISE_OWNER';
-          this.saveUser(ent.email, name, role, ent.id, undefined);
+          const avatarUrl = ent.user?.avatar_url || ent.avatar_url || ent.logo_url;
+          this.saveUser(ent.email, name, role, ent.id, avatarUrl);
           return this.getUser();
         }
         this.clearUser();
